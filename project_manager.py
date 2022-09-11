@@ -8,135 +8,150 @@ import shutil
 import datetime
 
 
-PM_DIR ='C:\\Users\\e433679\\Documents\\Project_Manager\\'
+# PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
+PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
+
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
 sg.theme('Reddit')
 
+
 def copy2clip(txt):
-    cmd='echo '+txt.strip()+'|clip'
+    cmd = 'echo '+txt.strip()+'|clip'
     return subprocess.check_call(cmd, shell=True)
 
 
-
-## Windows:
+# Windows:
 # Project Main Window
 class ProjWin:
 
     def __init__(self, cr, pkg):
         self.cr = cr
         self.pkg = pkg
-        
+
         self.width = 1000
         self.height = 250
 
-        self.proj_path = PM_DIR + f"{self.cr}\\{self.pkg}\\"
+        self.proj_path = PM_DIR + f"{self.cr}/{self.pkg}/"
 
         self.get_proj_files()
         self.load_proj_data()
-        
+
         self.proj_status = 'NEW'
 
-        l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(150,10), key="_DOC_LB_")],
-                                                            [sg.Button('Open', key='_OPEN_DOC_'),sg.FilesBrowse('Add Files',enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
-                         
-                        [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(150,10), key="_ANAL_LB_")],
-                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'),sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_')]])],
+        l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(150, 10), key="_DOC_LB_")],
+                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
 
-                        [sg.Frame('Results:',layout= [[sg.Listbox(values=self.results_files, size=(150,10), key="_RES_LB_")],
+                        [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(150, 10), key="_ANAL_LB_")],
+                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_')]])],
+
+                        [sg.Frame('Results:', layout=[[sg.Listbox(values=self.results_files, size=(150, 10), key="_RES_LB_")],
                                                       [sg.Button('Open', key='_OPEN_RESULTS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_RES_FILES_", key='_ADD_RES_FILES_')]])],
                         ]
-        
+
         r_col_layout = [[sg.Frame('Work Status:', layout=[
-                                [sg.Text("Task Status: ", size=(10,1)), sg.Combo(['NEW','IN-PROGRESS','COMPLETE','REWORK'],default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(10,1))],
-                                [sg.Text("Disposition: ", size=(10,1)), sg.Combo(["PASS", "FAIL"],default_value=self.proj_data.get('PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10,1))],
-                                ], border_width=1)],
-                        [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get('PROJ_NOTES'), size=(50,15), key='_PROJ_NOTES_')]])],
-                        [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get('PROJ_TODOS'), size=(50,15), key='_PROJ_TODOS_')]])],
-                        [sg.Button("Save", key="_UPDATE_STATUS_"),sg.Button('Refresh', key='_REFRESH_' ), sg.Button('Close', key="Quit")],  
-                        ]
-        
-        self.layout = [
-                [sg.Frame("Task Details:",
-                    layout=[[sg.Text('CR:', size=(10,1)),sg.InputText(self.cr, disabled=True, size=(28,1)),sg.Button(key="_CPY_CR_",button_text='Copy CR Num.')], 
-                            [sg.Text(f'PKG/TASK:', size=(10,1)),sg.InputText(self.pkg, disabled=True, size=(28,1)), sg.Button(key="_CPY_PKG_",button_text='Copy Pkg. Num.')],
-                            [sg.Text(f"IO:", size=(10,1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get("PROJ_IO"), size=(28,1)), sg.Button(key="_CPY_IO_",button_text='Copy IO Num.')]
-                            ],)
-                ],
-                [sg.HorizontalSeparator()],
-                [sg.Column(l_col_layout), sg.VerticalSeparator(pad=(10,10)), sg.Column(r_col_layout)]
+            [sg.Text("Task Status: ", size=(10, 1)), sg.Combo(['NEW', 'IN-PROGRESS', 'COMPLETE', 'REWORK'],
+                                                              default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(10, 1))],
+            [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(["PASS", "FAIL"], default_value=self.proj_data.get(
+                'PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10, 1))],
+        ], border_width=1)],
+            [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
+                'PROJ_NOTES'), size=(50, 15), key='_PROJ_NOTES_')]])],
+            [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get(
+                'PROJ_TODOS'), size=(50, 15), key='_PROJ_TODOS_')]])],
+            [sg.Button("Save", key="_UPDATE_STATUS_"), sg.Button(
+                'Refresh', key='_REFRESH_'), sg.Button('Close', key="Quit")],
         ]
-        self.window = sg.Window(title="ProjManager V1", layout=self.layout, resizable=True )
-    
+
+        self.layout = [
+            [sg.Frame("Task Details:",
+                      layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), sg.Button(key="_CPY_CR_", button_text='Copy CR Num.')],
+                              [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
+                                  28, 1)), sg.Button(key="_CPY_PKG_", button_text='Copy Pkg. Num.')],
+                              [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
+                                  "PROJ_IO"), size=(28, 1)), sg.Button(key="_CPY_IO_", button_text='Copy IO Num.')]
+                              ],)
+             ],
+            [sg.HorizontalSeparator()],
+            [sg.Column(l_col_layout), sg.VerticalSeparator(
+                pad=(10, 10)), sg.Column(r_col_layout)]
+        ]
+        self.window = sg.Window(title="ProjManager V1",
+                                layout=self.layout, resizable=True)
+
     def get_proj_files(self):
         doc_files = []
         analysis_files = []
         results_files = []
-        
+
         for file in os.listdir(self.proj_path+"Documentation"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Documentation\\{file}")):
+            if os.path.isfile(os.path.join(self.proj_path, f"Documentation/{file}")):
                 doc_files.append(file)
-            
+
         for file in os.listdir(self.proj_path+"Analysis"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Analysis\\{file}")):
+            if os.path.isfile(os.path.join(self.proj_path, f"Analysis/{file}")):
                 analysis_files.append(file)
         for file in os.listdir(self.proj_path+"Results"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Results\\{file}")):
+            if os.path.isfile(os.path.join(self.proj_path, f"Results/{file}")):
                 results_files.append(file)
-                
+
         self.doc_files = doc_files
         self.analysis_files = analysis_files
         self.results_files = results_files
-    
+
     def load_proj_data(self):
         proj_data_path = self.proj_path + 'PM_proj.yaml'
-        
+
         try:
-            f = open(proj_data_path,'r')
+            f = open(proj_data_path, 'r')
             data = yaml.full_load(f)
             f.close()
-        
+
             self.proj_data = data
         except FileNotFoundError:
             self.proj_data = {}
-        
+
     def save_project_data(self):
         proj_data_path = self.proj_path + 'PM_proj.yaml'
-        f = open(proj_data_path,'w')
-        yaml.dump(self.proj_data,f)
-        f.close()       
-    
+        f = open(proj_data_path, 'w')
+        yaml.dump(self.proj_data, f)
+        f.close()
+
     def add_files(self, dir, files):
         print(files.split(';'))
         files = files.split(';')
         for file in files:
+            if file == '':
+                continue
             shutil.copy2(file, dir)
-            pass
 
     def spawn(self):
         while True:
             event, values = self.window.read()
             print(event)
-            
+
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
             elif event == "Quit":
                 break
             elif event == "_CPY_CR_":
-                copy2clip(f'{self.cr}'.strip().strip('\n'))
+                copy2clip(f'{self.cr}'.strip().strip('/n'))
             elif event == "_CPY_PKG_":
-                copy2clip(f'{self.pkg}'.strip().strip('\n'))
+                copy2clip(f'{self.pkg}'.strip().strip('/n'))
             elif event == "_CPY_IO_":
-                copy2clip(f'{self.io}'.strip().strip('\n'))
+                copy2clip(f'{self.io}'.strip().strip('/n'))
             elif event == '_OPEN_DOC_':
                 for i in self.window['_DOC_LB_'].get_indexes():
-                    os.startfile(self.proj_path + 'Documentation\\'+self.doc_files[i])
+                    os.startfile(self.proj_path +
+                                 'Documentation/'+self.doc_files[i])
             elif event == '_OPEN_ANALYSIS_':
                 for i in self.window['_ANAL_LB_'].get_indexes():
-                    os.startfile(self.proj_path+'Analysis\\'+self.analysis_files[i])
+                    os.startfile(self.proj_path+'Analysis/' +
+                                 self.analysis_files[i])
             elif event == '_OPEN_RESULTS_':
                 for i in self.window['_RES_LB_'].get_indexes():
-                    os.startfile(self.proj_path+'Results\\'+self.results_files[i])
+                    os.startfile(self.proj_path+'Results/' +
+                                 self.results_files[i])
             elif event == '_UPDATE_STATUS_':
                 self.proj_data['PROJ_STATUS'] = values['_STAT_COMBO_']
                 self.proj_data['PROJ_DISPOSITION'] = values['_DISP_COMBO_']
@@ -150,17 +165,20 @@ class ProjWin:
                 self.window['_RES_LB_'].update(values=self.results_files)
                 self.window.refresh()
             elif event == '_ADD_DOC_FILES_':
-                self.add_files(self.proj_path+"\\Documentation", values['_ADD_DOC_FILES_'])
+                self.add_files(self.proj_path+"/Documentation",
+                               values['_ADD_DOC_FILES_'])
                 self.get_proj_files()
                 self.window['_DOC_LB_'].update(values=self.doc_files)
                 self.window.refresh()
             elif event == '_ADD_ANAL_FILES_':
-                self.add_files(self.proj_path+"\\Analysis", values['_ADD_ANAL_FILES_'])
+                self.add_files(self.proj_path+"/Analysis",
+                               values['_ADD_ANAL_FILES_'])
                 self.get_proj_files()
                 self.window['_ANAL_LB_'].update(values=self.analysis_files)
                 self.window.refresh()
             elif event == '_ADD_RES_FILES_':
-                self.add_files(self.proj_path+"\\Results", values['_ADD_RES_FILES_'])
+                self.add_files(self.proj_path+"/Results",
+                               values['_ADD_RES_FILES_'])
                 self.get_proj_files()
                 self.window['_RES_LB_'].update(values=self.results_files)
                 self.window.refresh()
@@ -170,27 +188,28 @@ class ProjWin:
                 self.window['_ANAL_LB_'].update(values=self.analysis_files)
                 self.window['_RES_LB_'].update(values=self.results_files)
                 self.window.refresh()
-            
-        self.window.close()
-        
 
-        
+        self.window.close()
+
+
 # New Project Window
 class NewProjWin:
 
     def __init__(self):
         self.layout = [
             [sg.Text('New Project')],
-            [sg.Text("CR/Proj Number: ", size=(15,1)), sg.InputText()],
-            [sg.Text("Pkg. Number (Name): ", size=(15,1)), sg.InputText()],
+            [sg.Text("CR/Proj Number: ", size=(15, 1)), sg.InputText()],
+            [sg.Text("Pkg. Number (Name): ", size=(15, 1)), sg.InputText()],
             [sg.Button("Create", bind_return_key=True)]
 
-                       
+
         ]
-        self.window = sg.Window(title="ProjManager V1", layout=self.layout,margins=(5, 5), finalize=True)
-    
-    def mk_proj_dir(self,cr,pkg):
-        dirs = [PM_DIR+cr,PM_DIR+f'{cr}\\{pkg}',PM_DIR+f'{cr}\\{pkg}\\Documentation',PM_DIR+f'{cr}\\{pkg}\\Analysis',PM_DIR+f'{cr}\\{pkg}\\Results']
+        self.window = sg.Window(
+            title="ProjManager V1", layout=self.layout, margins=(5, 5), finalize=True)
+
+    def mk_proj_dir(self, cr, pkg):
+        dirs = [PM_DIR+cr, PM_DIR+f'{cr}/{pkg}', PM_DIR+f'{cr}/{pkg}/Documentation',
+                PM_DIR+f'{cr}/{pkg}/Analysis', PM_DIR+f'{cr}/{pkg}/Results']
         try:
             os.mkdir(dirs[0])
         except:
@@ -208,13 +227,13 @@ class NewProjWin:
         while True:
             event, values = self.window.read()
             print(event)
-            
+
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
             elif event == "Quit":
                 break
             elif event == "Create":
-                cr,pkg = values[0], values[1]
+                cr, pkg = values[0], values[1]
                 if cr == '' or pkg == '':
                     sg.popup('One or more fields blank. Please enter all data.')
                     continue
@@ -223,8 +242,8 @@ class NewProjWin:
                     continue
 
                 self.window.close()
-                
-                proj_win = ProjWin(cr,pkg)
+
+                proj_win = ProjWin(cr, pkg)
                 proj_win.spawn()
             elif datetime.datetime.now() - self.time > 10:
                 pass
@@ -232,6 +251,8 @@ class NewProjWin:
         self.window.close()
 
 # Open Task Window
+
+
 class OpenProjWin:
 
     def __init__(self):
@@ -241,46 +262,46 @@ class OpenProjWin:
         #     [sg.Text("Pkg. Number (Name): ", size=(15,1)), sg.InputText()],
         #     [sg.Button("Create", bind_return_key=True)]
 
-                       
         # ]
-        
-        
+
         self.crs = []
         self.packages = []
-        
+
         self.load_CRs()
-        
+
         l_col = [
-                [sg.Text('CR Number: '), sg.Combo(self.crs, size=(12,1), key='_CR_COMBO_'), sg.Button('Go', key='_UPDATE_PKG_LIST_')],
-                [sg.Frame('Packages/Tasks',layout=[
-                                                   [sg.Listbox(self.packages, key="_PKG_LB_", size=(30,10))],
-                                                    ])]
-                ]
-        
+                [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
+                    12, 1), key='_CR_COMBO_'), sg.Button('Go', key='_UPDATE_PKG_LIST_')],
+                [sg.Frame('Packages/Tasks', layout=[
+                                                   [sg.Listbox(
+                                                       self.packages, key="_PKG_LB_", size=(30, 10))],
+                ])]
+        ]
+
         self.layout = [
             [sg.Column(l_col)],
             [sg.Button("Open", key='_OPEN_PROJ_')]
         ]
-        
-        self.window = sg.Window(title="ProjManager V1", layout=self.layout, margins=(5, 5), finalize=True)
-    
+
+        self.window = sg.Window(
+            title="ProjManager V1", layout=self.layout, margins=(5, 5), finalize=True)
+
     def load_CRs(self):
         self.crs = []
         for dir in os.listdir(PM_DIR):
             self.crs.append(dir)
-            
+
     def get_packages(self, cr):
         self.packages = []
         for dir in os.listdir(PM_DIR+cr):
             self.packages.append(dir)
-                
-                
+
     def spawn(self):
         # self.window.bind('Create', "Enter")
         while True:
             event, values = self.window.read()
             print(event)
-            
+
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
             elif event == "Quit":
@@ -292,16 +313,14 @@ class OpenProjWin:
             elif event == "_OPEN_PROJ_":
                 cr = values["_CR_COMBO_"]
                 pkg = values["_PKG_LB_"][0]
-                
+
                 if cr == '' or pkg == '':
                     sg.popup('Please select a CR and Package.')
                     continue
-                
+
                 self.window.close()
-                proj_win = ProjWin(cr,pkg)
+                proj_win = ProjWin(cr, pkg)
                 proj_win.spawn()
-                
-                
 
         self.window.close()
 
@@ -311,20 +330,22 @@ class OpenProjWin:
 class StartWin:
 
     def __init__(self):
-        
+
         start_layout = [
-                [sg.Button("New Task", key='_NEW_TASK_', size=(50,1))],
-                [sg.Button("Open Task", key='_OPEN_TASK_', size=(50,1))],
-                [sg.Button("Quit", size=(50,1))]]
-        
-        self.layout = [[sg.Frame('Project Manager V1', layout=start_layout, pad=(25,25))]]
-        self.window = sg.Window(title="ProjManager V1", layout=self.layout,margins=(5, 5))
-    
+            [sg.Button("New Task", key='_NEW_TASK_', size=(50, 1))],
+            [sg.Button("Open Task", key='_OPEN_TASK_', size=(50, 1))],
+            [sg.Button("Quit", size=(50, 1))]]
+
+        self.layout = [
+            [sg.Frame('Project Manager V1', layout=start_layout, pad=(25, 25))]]
+        self.window = sg.Window(title="ProjManager V1",
+                                layout=self.layout, margins=(5, 5))
+
     def spawn(self):
         while True:
             event, values = self.window.read()
             print(event)
-            
+
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
             elif event == "Quit":
@@ -335,21 +356,16 @@ class StartWin:
                 new_proj_win.spawn()
                 self.window.un_hide()
                 continue
-            
+
             elif event == '_OPEN_TASK_':
                 self.window.hide()
                 open_proj_win = OpenProjWin()
                 open_proj_win.spawn()
                 self.window.un_hide()
-                
-        self.window.close()
-    
 
+        self.window.close()
 
 
 # start_win = sg.Window(title="hello", layout=start_win_layout,margins=(100, 50))
-
 start = StartWin()
 start.spawn()
-
-
