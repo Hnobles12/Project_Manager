@@ -8,14 +8,13 @@ import shutil
 import datetime
 import tinydb as tdb
 
-
-# PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
-PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
+PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
+#PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
 PM_DB_FILE = PM_DIR+'pm_db.json'
 
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
-sg.theme('Reddit')
+sg.theme('DarkGrey14')
 
 
 def copy2clip(txt):
@@ -250,7 +249,7 @@ class NewProjWin:
 
         ]
         self.window = sg.Window(
-            title="ProjManager V1", layout=self.layout, margins=(5, 5), finalize=True)
+            title="ProjManager V1", layout=self.layout, margins=(5, 5))
 
     def mk_proj_dir(self, cr, pkg):
         dirs = [PM_DIR+cr, PM_DIR+f'{cr}/{pkg}', PM_DIR+f'{cr}/{pkg}/Documentation',
@@ -259,12 +258,26 @@ class NewProjWin:
             os.mkdir(dirs[0])
         except:
             pass
-        try:
-            for dir in dirs[1:]:
+        for dir in dirs[1:]:
+            try:
                 os.mkdir(dir)
-        except FileExistsError:
-            return False
+            except:
+                pass
+
         return True
+    
+    def migrate_setup_pkg(self, pkgs_dict):
+        for cr in pkgs_dict:
+            print(f'Migrating CR: {cr}')
+            for pkg in pkgs_dict.get(cr):
+                if len(db.get_pkg(pkg)) == 0:    
+                    print(f'Migrating pkg: {pkg}')
+                    self.mk_proj_dir(cr, pkg)
+                    db.insert_pkg({'name':pkg, 'CR':cr})
+                    
+                
+                
+                
 
     def spawn(self):
         # self.window.bind('Create', "Enter")
@@ -329,7 +342,7 @@ class OpenProjWin:
 
         self.layout = [
             [sg.Column(l_col)],
-            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True)]
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
         ]
 
         self.window = sg.Window(
@@ -338,12 +351,30 @@ class OpenProjWin:
     def load_CRs(self):
         self.crs = []
         for dir in os.listdir(PM_DIR):
-            self.crs.append(dir)
+            if os.path.isdir(PM_DIR+dir):
+                self.crs.append(dir)
 
     def get_packages(self, cr):
         self.packages = []
         for dir in os.listdir(PM_DIR+cr):
-            self.packages.append(dir)
+            if os.path.isdir(PM_DIR+cr+'/'+dir):
+                self.packages.append(dir)
+            # print(dir, self.packages)
+            
+    def migrate_all(self):
+        all_pkgs = {}
+        all_crs = []
+        self.load_CRs()
+        
+        for cr in self.crs:
+            self.get_packages(cr)
+            all_pkgs[cr] = self.packages
+
+        new_win = NewProjWin()
+        
+        print('Starting migration.')
+        new_win.migrate_setup_pkg(all_pkgs)
+        print('Migration Complete.')
 
     def spawn(self):
         # self.window.bind('Create', "Enter")
@@ -369,6 +400,8 @@ class OpenProjWin:
                 print(names)
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
+            elif event == '_MIGRATE_':
+                self.migrate_all()
             elif event == "_OPEN_PROJ_":
                 cr = values["_CR_COMBO_"]
                 pkg = values["_PKG_LB_"][0]
