@@ -6,14 +6,15 @@ import os
 import yaml
 import shutil
 import datetime
+import tinydb as tdb
 
-
-# PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
-PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
+PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
+#PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
+PM_DB_FILE = PM_DIR+'pm_db.json'
 
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
-sg.theme('Reddit')
+sg.theme('DarkGrey14')
 
 
 def copy2clip(txt):
@@ -21,8 +22,41 @@ def copy2clip(txt):
     return subprocess.check_call(cmd, shell=True)
 
 
+class Db:
+
+    def __init__(self, db_file):
+        self.db = tdb.TinyDB(db_file)
+        self.Pkg = tdb.Query()
+
+    def get_pkg(self, pkg_name):
+        pkg_data = self.db.search(self.Pkg.name == pkg_name)
+        # print(pkg_data)
+        return pkg_data
+
+    def get_pkg_names(self) -> list[str]:
+        return [d.get('name') for d in self.db.all()]
+
+    def get_CRs(self) -> list[str]:
+        CRs = [d.get('CR') for d in self.db.all()]
+        return [*set(CRs)]
+
+    def get_pkg_names_by_CR(self, CR):
+        return [d.get('name') for d in self.db.search(self.Pkg.CR == CR)]
+
+    def insert_pkg(self, pkg: dict):
+        self.db.insert(pkg)
+
+    def update_pkg(self, pkg_name, pkg_dict):
+
+        for pkg in self.get_pkg(pkg_name):
+            # pkg.update(pkg_dict)
+            self.db.update(pkg_dict, self.Pkg.name == pkg_name)
+
+
 # Windows:
 # Project Main Window
+
+
 class ProjWin:
 
     def __init__(self, cr, pkg):
@@ -37,7 +71,8 @@ class ProjWin:
         self.get_proj_files()
         self.load_proj_data()
 
-        self.proj_status = 'NEW'
+        # self.proj_data = db.get_pkg(self.pkg)[0]
+        print('proj_data: ', self.proj_data)
 
         l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(150, 10), key="_DOC_LB_")],
                                                             [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
@@ -59,19 +94,30 @@ class ProjWin:
                 'PROJ_NOTES'), size=(50, 15), key='_PROJ_NOTES_')]])],
             [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get(
                 'PROJ_TODOS'), size=(50, 15), key='_PROJ_TODOS_')]])],
-            [sg.Button("Save", key="_UPDATE_STATUS_"), sg.Button(
+            [sg.Button("Save", key="_UPDATE_STATUS_", bind_return_key=True), sg.Button(
                 'Refresh', key='_REFRESH_'), sg.Button('Close', key="Quit")],
         ]
 
+        top_row_details_frame = sg.Frame("Task Details:",
+                                         layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), ],
+                                                 [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
+                                                     28, 1)), ],
+                                                 [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
+                                                     "PROJ_IO"), size=(28, 1))]])
+
+        top_row_model_details_frame = sg.Frame('Model/TVE Details:', layout=[
+            [sg.Text('TVE: ', size=(15, 1)), sg.Multiline(
+                self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(20, 5))],
+        ])
+        top_row_model_details_frame2 = sg.Frame('TVE Details:', layout=[
+            [sg.Text('Models: ', size=(15, 1)), sg.Listbox
+             (
+                self.models_files, key='_MODELS_LB_', size=(20, 5))],
+        ])
+
         self.layout = [
-            [sg.Frame("Task Details:",
-                      layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), sg.Button(key="_CPY_CR_", button_text='Copy CR Num.')],
-                              [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
-                                  28, 1)), sg.Button(key="_CPY_PKG_", button_text='Copy Pkg. Num.')],
-                              [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
-                                  "PROJ_IO"), size=(28, 1)), sg.Button(key="_CPY_IO_", button_text='Copy IO Num.')]
-                              ],)
-             ],
+            [top_row_details_frame, top_row_model_details_frame,
+                top_row_model_details_frame2],
             [sg.HorizontalSeparator()],
             [sg.Column(l_col_layout), sg.VerticalSeparator(
                 pad=(10, 10)), sg.Column(r_col_layout)]
@@ -83,6 +129,7 @@ class ProjWin:
         doc_files = []
         analysis_files = []
         results_files = []
+        models_files = []
 
         for file in os.listdir(self.proj_path+"Documentation"):
             if os.path.isfile(os.path.join(self.proj_path, f"Documentation/{file}")):
@@ -94,28 +141,24 @@ class ProjWin:
         for file in os.listdir(self.proj_path+"Results"):
             if os.path.isfile(os.path.join(self.proj_path, f"Results/{file}")):
                 results_files.append(file)
+        for file in os.listdir(self.proj_path+"Models"):
+            if os.path.isfile(os.path.join(self.proj_path, f"Models/{file}")):
+                models_files.append(file)
 
         self.doc_files = doc_files
         self.analysis_files = analysis_files
         self.results_files = results_files
+        self.models_files = models_files
 
     def load_proj_data(self):
-        proj_data_path = self.proj_path + 'PM_proj.yaml'
-
-        try:
-            f = open(proj_data_path, 'r')
-            data = yaml.full_load(f)
-            f.close()
-
-            self.proj_data = data
-        except FileNotFoundError:
-            self.proj_data = {}
+        self.proj_data = db.get_pkg(self.pkg)[0]
 
     def save_project_data(self):
-        proj_data_path = self.proj_path + 'PM_proj.yaml'
-        f = open(proj_data_path, 'w')
-        yaml.dump(self.proj_data, f)
-        f.close()
+        # proj_data_path = self.proj_path + 'PM_proj.yaml'
+        # f = open(proj_data_path, 'w')
+        # yaml.dump(self.proj_data, f)
+        # f.close()
+        db.update_pkg(self.pkg, self.proj_data)
 
     def add_files(self, dir, files):
         print(files.split(';'))
@@ -158,6 +201,7 @@ class ProjWin:
                 self.proj_data['PROJ_NOTES'] = values["_PROJ_NOTES_"]
                 self.proj_data['PROJ_TODOS'] = values['_PROJ_TODOS_']
                 self.proj_data['PROJ_IO'] = values['_PROJ_IO_']
+                self.proj_data['PROJ_TVE'] = values['_PROJ_TVE_']
                 self.save_project_data()
                 self.get_proj_files()
                 self.window['_DOC_LB_'].update(values=self.doc_files)
@@ -198,28 +242,42 @@ class NewProjWin:
     def __init__(self):
         self.layout = [
             [sg.Text('New Project')],
-            [sg.Text("CR/Proj Number: ", size=(15, 1)), sg.InputText()],
-            [sg.Text("Pkg. Number (Name): ", size=(15, 1)), sg.InputText()],
+            [sg.Text("CR/Proj Number: ", size=(20, 1)), sg.InputText()],
+            [sg.Text("Pkg. Number (Name): ", size=(20, 1)), sg.InputText()],
             [sg.Button("Create", bind_return_key=True)]
 
 
         ]
         self.window = sg.Window(
-            title="ProjManager V1", layout=self.layout, margins=(5, 5), finalize=True)
+            title="ProjManager V1", layout=self.layout, margins=(5, 5))
 
     def mk_proj_dir(self, cr, pkg):
         dirs = [PM_DIR+cr, PM_DIR+f'{cr}/{pkg}', PM_DIR+f'{cr}/{pkg}/Documentation',
-                PM_DIR+f'{cr}/{pkg}/Analysis', PM_DIR+f'{cr}/{pkg}/Results']
+                PM_DIR+f'{cr}/{pkg}/Analysis', PM_DIR+f'{cr}/{pkg}/Results', PM_DIR+f'{cr}/{pkg}/Models']
         try:
             os.mkdir(dirs[0])
         except:
             pass
-        try:
-            for dir in dirs[1:]:
+        for dir in dirs[1:]:
+            try:
                 os.mkdir(dir)
-        except FileExistsError:
-            return False
+            except:
+                pass
+
         return True
+    
+    def migrate_setup_pkg(self, pkgs_dict):
+        for cr in pkgs_dict:
+            print(f'Migrating CR: {cr}')
+            for pkg in pkgs_dict.get(cr):
+                if len(db.get_pkg(pkg)) == 0:    
+                    print(f'Migrating pkg: {pkg}')
+                    self.mk_proj_dir(cr, pkg)
+                    db.insert_pkg({'name':pkg, 'CR':cr})
+                    
+                
+                
+                
 
     def spawn(self):
         # self.window.bind('Create', "Enter")
@@ -240,6 +298,8 @@ class NewProjWin:
                 if not self.mk_proj_dir(cr, pkg):
                     sg.popup('Project(s) already exist at location.')
                     continue
+
+                db.insert_pkg({'name': pkg, 'CR': cr})
 
                 self.window.close()
 
@@ -270,17 +330,19 @@ class OpenProjWin:
         self.load_CRs()
 
         l_col = [
-                [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
-                    12, 1), key='_CR_COMBO_'), sg.Button('Go', key='_UPDATE_PKG_LIST_')],
-                [sg.Frame('Packages/Tasks', layout=[
-                                                   [sg.Listbox(
-                                                       self.packages, key="_PKG_LB_", size=(30, 10))],
-                ])]
+            [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
+                12, 1), key='_CR_COMBO_', change_submits=True, enable_events=True)],
+            [sg.Text('PKG Search: '), sg.InputText('', key='_PKG_NAME_', size=(15, 1),
+                                                   enable_events=True, change_submits=True)],
+            [sg.Frame('Packages/Tasks', layout=[
+                [sg.Listbox(
+                    self.packages, key="_PKG_LB_", size=(30, 10))],
+            ])]
         ]
 
         self.layout = [
             [sg.Column(l_col)],
-            [sg.Button("Open", key='_OPEN_PROJ_')]
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
         ]
 
         self.window = sg.Window(
@@ -289,12 +351,30 @@ class OpenProjWin:
     def load_CRs(self):
         self.crs = []
         for dir in os.listdir(PM_DIR):
-            self.crs.append(dir)
+            if os.path.isdir(PM_DIR+dir):
+                self.crs.append(dir)
 
     def get_packages(self, cr):
         self.packages = []
         for dir in os.listdir(PM_DIR+cr):
-            self.packages.append(dir)
+            if os.path.isdir(PM_DIR+cr+'/'+dir):
+                self.packages.append(dir)
+            # print(dir, self.packages)
+            
+    def migrate_all(self):
+        all_pkgs = {}
+        all_crs = []
+        self.load_CRs()
+        
+        for cr in self.crs:
+            self.get_packages(cr)
+            all_pkgs[cr] = self.packages
+
+        new_win = NewProjWin()
+        
+        print('Starting migration.')
+        new_win.migrate_setup_pkg(all_pkgs)
+        print('Migration Complete.')
 
     def spawn(self):
         # self.window.bind('Create', "Enter")
@@ -306,17 +386,33 @@ class OpenProjWin:
                 break
             elif event == "Quit":
                 break
-            elif event == "_UPDATE_PKG_LIST_":
+            elif event == '_CR_COMBO_':
                 self.get_packages(values["_CR_COMBO_"])
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
+            elif event == '_PKG_NAME_':
+                # self.get_packages(values["_CR_COMBO_"])
+                self.packages = []
+                names = db.get_pkg_names()
+                for name in names:
+                    if values['_PKG_NAME_'] in name:
+                        self.packages.append(name)
+                print(names)
+                self.window['_PKG_LB_'].update(values=self.packages)
+                self.window.refresh()
+            elif event == '_MIGRATE_':
+                self.migrate_all()
             elif event == "_OPEN_PROJ_":
                 cr = values["_CR_COMBO_"]
                 pkg = values["_PKG_LB_"][0]
 
-                if cr == '' or pkg == '':
-                    sg.popup('Please select a CR and Package.')
+                if pkg == '':
+                    sg.popup('Please select a Package.')
                     continue
+
+                elif cr == '':
+                    pkg_data = db.get_pkg(pkg)[0]
+                    cr = pkg_data.get('CR')
 
                 self.window.close()
                 proj_win = ProjWin(cr, pkg)
@@ -367,5 +463,6 @@ class StartWin:
 
 
 # start_win = sg.Window(title="hello", layout=start_win_layout,margins=(100, 50))
+db = Db(PM_DB_FILE)
 start = StartWin()
 start.spawn()
