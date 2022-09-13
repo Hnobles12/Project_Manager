@@ -100,23 +100,25 @@ class ProjWin:
         ]
 
         top_row_details_frame = sg.Frame("Task Details:",
-                                         layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), sg.Button(key="_CPY_CR_", button_text='Copy CR Num.')],
+                                         layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), ],
                                                  [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
-                                                     28, 1)), sg.Button(key="_CPY_PKG_", button_text='Copy Pkg. Num.')],
+                                                     28, 1)), ],
                                                  [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
-                                                     "PROJ_IO"), size=(28, 1)), sg.Button(key="_CPY_IO_", button_text='Copy IO Num.')]])
+                                                     "PROJ_IO"), size=(28, 1))]])
 
         top_row_model_details_frame = sg.Frame('Model/TVE Details:', layout=[
             [sg.Text('TVE: ', size=(15, 1)), sg.Multiline(
                 self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(20, 5))],
         ])
         top_row_model_details_frame2 = sg.Frame('TVE Details:', layout=[
-            [sg.Text('Models: ', size=(15, 1)), sg.Multiline(
-                self.models_files, autoscroll=True, key='_MODELS_LB_', size=(20, 5))],
+            [sg.Text('Models: ', size=(15, 1)), sg.Listbox
+             (
+                self.models_files, key='_MODELS_LB_', size=(20, 5))],
         ])
 
         self.layout = [
-            [top_row_details_frame, top_row_model_details_frame],
+            [top_row_details_frame, top_row_model_details_frame,
+                top_row_model_details_frame2],
             [sg.HorizontalSeparator()],
             [sg.Column(l_col_layout), sg.VerticalSeparator(
                 pad=(10, 10)), sg.Column(r_col_layout)]
@@ -241,8 +243,8 @@ class NewProjWin:
     def __init__(self):
         self.layout = [
             [sg.Text('New Project')],
-            [sg.Text("CR/Proj Number: ", size=(15, 1)), sg.InputText()],
-            [sg.Text("Pkg. Number (Name): ", size=(15, 1)), sg.InputText()],
+            [sg.Text("CR/Proj Number: ", size=(20, 1)), sg.InputText()],
+            [sg.Text("Pkg. Number (Name): ", size=(20, 1)), sg.InputText()],
             [sg.Button("Create", bind_return_key=True)]
 
 
@@ -252,7 +254,7 @@ class NewProjWin:
 
     def mk_proj_dir(self, cr, pkg):
         dirs = [PM_DIR+cr, PM_DIR+f'{cr}/{pkg}', PM_DIR+f'{cr}/{pkg}/Documentation',
-                PM_DIR+f'{cr}/{pkg}/Analysis', PM_DIR+f'{cr}/{pkg}/Results']
+                PM_DIR+f'{cr}/{pkg}/Analysis', PM_DIR+f'{cr}/{pkg}/Results', PM_DIR+f'{cr}/{pkg}/Models']
         try:
             os.mkdir(dirs[0])
         except:
@@ -316,7 +318,9 @@ class OpenProjWin:
 
         l_col = [
             [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
-                12, 1), key='_CR_COMBO_'), sg.Button('Go', key='_UPDATE_PKG_LIST_')],
+                12, 1), key='_CR_COMBO_', change_submits=True, enable_events=True)],
+            [sg.Text('PKG Search: '), sg.InputText('', key='_PKG_NAME_', size=(15, 1),
+                                                   enable_events=True, change_submits=True)],
             [sg.Frame('Packages/Tasks', layout=[
                 [sg.Listbox(
                     self.packages, key="_PKG_LB_", size=(30, 10))],
@@ -325,7 +329,7 @@ class OpenProjWin:
 
         self.layout = [
             [sg.Column(l_col)],
-            [sg.Button("Open", key='_OPEN_PROJ_')]
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True)]
         ]
 
         self.window = sg.Window(
@@ -351,17 +355,31 @@ class OpenProjWin:
                 break
             elif event == "Quit":
                 break
-            elif event == "_UPDATE_PKG_LIST_":
+            elif event == '_CR_COMBO_':
                 self.get_packages(values["_CR_COMBO_"])
+                self.window['_PKG_LB_'].update(values=self.packages)
+                self.window.refresh()
+            elif event == '_PKG_NAME_':
+                # self.get_packages(values["_CR_COMBO_"])
+                self.packages = []
+                names = db.get_pkg_names()
+                for name in names:
+                    if values['_PKG_NAME_'] in name:
+                        self.packages.append(name)
+                print(names)
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
             elif event == "_OPEN_PROJ_":
                 cr = values["_CR_COMBO_"]
                 pkg = values["_PKG_LB_"][0]
 
-                if cr == '' or pkg == '':
-                    sg.popup('Please select a CR and Package.')
+                if pkg == '':
+                    sg.popup('Please select a Package.')
                     continue
+
+                elif cr == '':
+                    pkg_data = db.get_pkg(pkg)[0]
+                    cr = pkg_data.get('CR')
 
                 self.window.close()
                 proj_win = ProjWin(cr, pkg)
