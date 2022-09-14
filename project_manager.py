@@ -14,7 +14,7 @@ PM_DB_FILE = PM_DIR+'pm_db.json'
 
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
-sg.theme('DarkGrey14')
+sg.theme('Topanga')
 
 
 def copy2clip(txt):
