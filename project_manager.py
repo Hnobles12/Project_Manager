@@ -32,7 +32,6 @@ class Db:
 
     def get_pkg(self, pkg_name):
         pkg_data = self.db.search(self.Pkg.name == pkg_name)
-        # print(pkg_data)
         return pkg_data
 
     def get_pkg_names(self) -> list[str]:
@@ -56,7 +55,6 @@ class Db:
     def update_pkg(self, pkg_name, pkg_dict):
 
         for pkg in self.get_pkg(pkg_name):
-            # pkg.update(pkg_dict)
             self.db.update(pkg_dict, self.Pkg.name == pkg_name)
 
 
@@ -78,7 +76,6 @@ class ProjWin:
         self.get_proj_files()
         self.load_proj_data()
 
-        # self.proj_data = db.get_pkg(self.pkg)[0]
         print('proj_data: ', self.proj_data)
 
         l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(125, 10), key="_DOC_LB_")],
@@ -161,10 +158,6 @@ class ProjWin:
         self.proj_data = db.get_pkg(self.pkg)[0]
 
     def save_project_data(self):
-        # proj_data_path = self.proj_path + 'PM_proj.yaml'
-        # f = open(proj_data_path, 'w')
-        # yaml.dump(self.proj_data, f)
-        # f.close()
         db.update_pkg(self.pkg, self.proj_data)
 
     def add_files(self, dir, files):
@@ -179,7 +172,6 @@ class ProjWin:
         while True:
             event, values = self.window.read()
 
-            # self.window.bind('<Ctrl_L><s>', '_UPDATE_STATUS_')
             print(event)
 
             if event == "Exit" or event == sg.WIN_CLOSED:
@@ -301,7 +293,6 @@ class NewProjWin:
                 
 
     def spawn(self):
-        # self.window.bind('Create', "Enter")
         self.time = datetime.datetime.now()
         while True:
             event, values = self.window.read()
@@ -337,13 +328,6 @@ class NewProjWin:
 class OpenProjWin:
 
     def __init__(self):
-        # self.layout = [
-        #     [sg.Text('New Project')],
-        #     [sg.Text("CR/Proj Number: ", size=(15,1)), sg.InputText()],
-        #     [sg.Text("Pkg. Number (Name): ", size=(15,1)), sg.InputText()],
-        #     [sg.Button("Create", bind_return_key=True)]
-
-        # ]
 
         self.crs = []
         self.packages = []
@@ -383,7 +367,6 @@ class OpenProjWin:
         for dir in os.listdir(PM_DIR+cr):
             if os.path.isdir(PM_DIR+cr+'/'+dir):
                 self.packages.append(dir)
-            # print(dir, self.packages)
             
     def migrate_all(self):
         all_pkgs = {}
@@ -401,7 +384,6 @@ class OpenProjWin:
         print('Migration Complete.')
 
     def spawn(self):
-        # self.window.bind('Create', "Enter")
         while True:
             event, values = self.window.read()
             print(event)
@@ -424,7 +406,6 @@ class OpenProjWin:
                 self.window.refresh()
 
             elif event == '_PKG_NAME_':
-                # self.get_packages(values["_CR_COMBO_"])
                 self.packages = []
                 names = db.get_pkg_names()
                 for name in names:
