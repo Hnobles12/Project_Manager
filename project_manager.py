@@ -14,6 +14,8 @@ PM_DB_FILE = PM_DIR+'pm_db.json'
 
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
+COMPLETION_STATUS = ['NEW', 'IN-PROGRESS', 'COMPLETE', 'REWORK']
+DISPOSITION = ['PASS', 'FAIL', 'UNKNOWN']
 sg.theme('Topanga')
 
 
@@ -42,6 +44,11 @@ class Db:
 
     def get_pkg_names_by_CR(self, CR):
         return [d.get('name') for d in self.db.search(self.Pkg.CR == CR)]
+    
+    def get_pkg_names_by_CS(self, CS):
+        return [d.get('name') for d in self.db.search(self.Pkg.PROJ_STATUS == CS)]
+    def get_pkg_names_by_DSP(self, DISP):
+        return [d.get('name') for d in self.db.search(self.Pkg.PROJ_DISPOSITION == DISP)]
 
     def insert_pkg(self, pkg: dict):
         self.db.insert(pkg)
@@ -85,9 +92,9 @@ class ProjWin:
                         ]
 
         r_col_layout = [[sg.Frame('Work Status:', layout=[
-            [sg.Text("Task Status: ", size=(10, 1)), sg.Combo(['NEW', 'IN-PROGRESS', 'COMPLETE', 'REWORK'],
+            [sg.Text("Task Status: ", size=(10, 1)), sg.Combo(COMPLETION_STATUS,
                                                               default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(10, 1))],
-            [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(["PASS", "FAIL"], default_value=self.proj_data.get(
+            [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(DISPOSITION, default_value=self.proj_data.get(
                 'PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
@@ -340,12 +347,15 @@ class OpenProjWin:
 
         self.crs = []
         self.packages = []
+        self.competion_status = []
 
         self.load_CRs()
 
         l_col = [
             [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
                 12, 1), key='_CR_COMBO_', change_submits=True, enable_events=True)],
+            [sg.Text('Completion Status:'), sg.Combo(COMPLETION_STATUS, size=(12,1), key='_CS_COMBO_', change_submits=True, enable_events=True)],
+            [sg.Text('Disposition:'), sg.Combo(DISPOSITION, size=(12,1), key='_DISP_COMBO_', change_submits=True, enable_events=True)],
             [sg.Text('PKG Search: '), sg.InputText('', key='_PKG_NAME_', size=(15, 1),
                                                    enable_events=True, change_submits=True)],
             [sg.Frame('Packages/Tasks', layout=[
@@ -404,6 +414,15 @@ class OpenProjWin:
                 self.get_packages(values["_CR_COMBO_"])
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
+            elif event == '_CS_COMBO_':
+                self.packages = db.get_pkg_names_by_CS(values['_CS_COMBO_'])
+                self.window['_PKG_LB_'].update(values=self.packages)
+                self.window.refresh()
+            elif event == '_DISP_COMBO_':
+                self.packages = db.get_pkg_names_by_DSP(values['_DISP_COMBO_'])
+                self.window['_PKG_LB_'].update(values=self.packages)
+                self.window.refresh()
+
             elif event == '_PKG_NAME_':
                 # self.get_packages(values["_CR_COMBO_"])
                 self.packages = []
