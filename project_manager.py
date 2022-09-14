@@ -109,7 +109,7 @@ class ProjWin:
             [sg.Text('TVE: ', size=(15, 1)), sg.Multiline(
                 self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(40, 5))],
         ])
-        top_row_model_details_frame2 = sg.Frame('TVE Details:', layout=[
+        top_row_model_details_frame2 = sg.Frame('Model Details:', layout=[
             [sg.Column(layout=[[sg.Text('Models: ', size=(15, 1))],[sg.Button('Open', key='_OPEN_MODEL_'), sg.FilesBrowse('Add Files',enable_events=True, target='_ADD_MODEL_FILES_', key='_ADD_MODEL_FILES_', initial_folder=self.proj_path+'/Models')]]), sg.Listbox(self.models_files, key='_MODELS_LB_', size=(20, 4)), ],
         ])
 
