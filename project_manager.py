@@ -74,14 +74,14 @@ class ProjWin:
         # self.proj_data = db.get_pkg(self.pkg)[0]
         print('proj_data: ', self.proj_data)
 
-        l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(150, 10), key="_DOC_LB_")],
-                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
+        l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(125, 10), key="_DOC_LB_")],
+                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
 
-                        [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(150, 10), key="_ANAL_LB_")],
-                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_')]])],
+                        [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(125, 10), key="_ANAL_LB_")],
+                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_',initial_folder=self.proj_path+'/Analysis')]])],
 
-                        [sg.Frame('Results:', layout=[[sg.Listbox(values=self.results_files, size=(150, 10), key="_RES_LB_")],
-                                                      [sg.Button('Open', key='_OPEN_RESULTS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_RES_FILES_", key='_ADD_RES_FILES_')]])],
+                        [sg.Frame('Results:', layout=[[sg.Listbox(values=self.results_files, size=(125, 10), key="_RES_LB_")],
+                                                      [sg.Button('Open', key='_OPEN_RESULTS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_RES_FILES_", key='_ADD_RES_FILES_',initial_folder=self.proj_path+'/Results')]])],
                         ]
 
         r_col_layout = [[sg.Frame('Work Status:', layout=[
@@ -91,9 +91,9 @@ class ProjWin:
                 'PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
-                'PROJ_NOTES'), size=(50, 15), key='_PROJ_NOTES_')]])],
+                'PROJ_NOTES'), size=(75, 15), key='_PROJ_NOTES_')]])],
             [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get(
-                'PROJ_TODOS'), size=(50, 15), key='_PROJ_TODOS_')]])],
+                'PROJ_TODOS'), size=(75, 15), key='_PROJ_TODOS_')]])],
             [sg.Button("Save", key="_UPDATE_STATUS_", bind_return_key=True), sg.Button(
                 'Refresh', key='_REFRESH_'), sg.Button('Close', key="Quit")],
         ]
@@ -105,14 +105,12 @@ class ProjWin:
                                                  [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
                                                      "PROJ_IO"), size=(28, 1))]])
 
-        top_row_model_details_frame = sg.Frame('Model/TVE Details:', layout=[
+        top_row_model_details_frame = sg.Frame('TVE Details:', layout=[
             [sg.Text('TVE: ', size=(15, 1)), sg.Multiline(
-                self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(20, 5))],
+                self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(40, 5))],
         ])
         top_row_model_details_frame2 = sg.Frame('TVE Details:', layout=[
-            [sg.Text('Models: ', size=(15, 1)), sg.Listbox
-             (
-                self.models_files, key='_MODELS_LB_', size=(20, 5))],
+            [sg.Column(layout=[[sg.Text('Models: ', size=(15, 1))],[sg.Button('Open', key='_OPEN_MODEL_'), sg.FilesBrowse('Add Files',enable_events=True, target='_ADD_MODEL_FILES_', key='_ADD_MODEL_FILES_', initial_folder=self.proj_path+'/Models')]]), sg.Listbox(self.models_files, key='_MODELS_LB_', size=(20, 4)), ],
         ])
 
         self.layout = [
@@ -123,7 +121,9 @@ class ProjWin:
                 pad=(10, 10)), sg.Column(r_col_layout)]
         ]
         self.window = sg.Window(title="ProjManager V1",
-                                layout=self.layout, resizable=True)
+                                layout=self.layout, resizable=True, finalize=True)
+        
+        self.window.bind('<Ctrl_L><s>', '_UPDATE_STATUS_')
 
     def get_proj_files(self):
         doc_files = []
@@ -171,6 +171,8 @@ class ProjWin:
     def spawn(self):
         while True:
             event, values = self.window.read()
+
+            # self.window.bind('<Ctrl_L><s>', '_UPDATE_STATUS_')
             print(event)
 
             if event == "Exit" or event == sg.WIN_CLOSED:
@@ -195,6 +197,10 @@ class ProjWin:
                 for i in self.window['_RES_LB_'].get_indexes():
                     os.startfile(self.proj_path+'Results/' +
                                  self.results_files[i])
+            elif event == '_OPEN_MODEL_':
+                for i in self.window['_MODELS_LB_'].get_indexes():
+                    os.startfile(self.proj_path+'Models/' +
+                                 self.models_files[i])
             elif event == '_UPDATE_STATUS_':
                 self.proj_data['PROJ_STATUS'] = values['_STAT_COMBO_']
                 self.proj_data['PROJ_DISPOSITION'] = values['_DISP_COMBO_']
@@ -207,6 +213,7 @@ class ProjWin:
                 self.window['_DOC_LB_'].update(values=self.doc_files)
                 self.window['_ANAL_LB_'].update(values=self.analysis_files)
                 self.window['_RES_LB_'].update(values=self.results_files)
+                self.window['_MODELS_LB_'].update(values=self.models_files)
                 self.window.refresh()
             elif event == '_ADD_DOC_FILES_':
                 self.add_files(self.proj_path+"/Documentation",
@@ -226,11 +233,18 @@ class ProjWin:
                 self.get_proj_files()
                 self.window['_RES_LB_'].update(values=self.results_files)
                 self.window.refresh()
+            elif event == '_ADD_MODEL_FILES_':
+                self.add_files(self.proj_path+"/Models",
+                               values['_ADD_MODEL_FILES_'])
+                self.get_proj_files()
+                self.window['_MODEL_LB_'].update(values=self.models_files)
+                self.window.refresh()
             elif event == '_REFRESH_':
                 self.get_proj_files()
                 self.window['_DOC_LB_'].update(values=self.doc_files)
                 self.window['_ANAL_LB_'].update(values=self.analysis_files)
                 self.window['_RES_LB_'].update(values=self.results_files)
+                self.window['_MODELS_LB_'].update(values=self.models_files)
                 self.window.refresh()
 
         self.window.close()
