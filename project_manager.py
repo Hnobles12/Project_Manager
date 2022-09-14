@@ -495,7 +495,6 @@ class StartWin:
         self.window.close()
 
 
-# start_win = sg.Window(title="hello", layout=start_win_layout,margins=(100, 50))
 db = Db(PM_DB_FILE)
 start = StartWin()
 start.spawn()
