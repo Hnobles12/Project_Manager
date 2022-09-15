@@ -58,7 +58,43 @@ class Db:
             self.db.update(pkg_dict, self.Pkg.name == pkg_name)
 
 
+
 # Windows:
+
+# Analysis Templates Window
+
+class AnalysisTemplatesWin:
+
+    def __init__(self, proj_path):
+        self.proj_path = proj_path
+
+        self.template_types = ['(CLMP) - JSFL02/3/7/9', '(BRKT) - JSFM35']
+
+        self.layout = [[sg.Text('Analysis Template:', size=(25,1)), sg.Combo(self.template_types, size=(40,1), key='template_cb')],
+                       [sg.Button('Load Template', key='-load_template-', tooltip="Load and open selected analysis template."), sg.Button('Back', key="Exit")]]
+
+        self.window = sg.Window('Analysis Templates', layout=self.layout)
+
+    def create_template(self, template_type):
+        pass
+
+
+    def spawn(self):
+        while True:
+            event, values = self.window.read()
+
+            print(event)
+
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                break
+            elif event == "Quit":
+                break
+            elif event == '-load_template-':
+                template = values['template_cb']
+                print(f"Loading template type: {template}")
+                self.window.close()
+
+
 # Project Main Window
 
 
@@ -82,7 +118,7 @@ class ProjWin:
                                                             [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
 
                         [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(125, 10), key="_ANAL_LB_")],
-                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_',initial_folder=self.proj_path+'/Analysis')]])],
+                                                       [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_',initial_folder=self.proj_path+'/Analysis'), sg.Button('Add Template', key='-add_analysis_template-')]])],
 
                         [sg.Frame('Results:', layout=[[sg.Listbox(values=self.results_files, size=(125, 10), key="_RES_LB_")],
                                                       [sg.Button('Open', key='_OPEN_RESULTS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_RES_FILES_", key='_ADD_RES_FILES_',initial_folder=self.proj_path+'/Results')]])],
@@ -238,6 +274,9 @@ class ProjWin:
                 self.get_proj_files()
                 self.window['_MODEL_LB_'].update(values=self.models_files)
                 self.window.refresh()
+            elif event == '-add_analysis_template-':
+                template_win = AnalysisTemplatesWin(self.proj_path)
+                template_win.spawn()
             elif event == '_REFRESH_':
                 self.get_proj_files()
                 self.window['_DOC_LB_'].update(values=self.doc_files)
