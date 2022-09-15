@@ -287,10 +287,6 @@ class NewProjWin:
                     print(f'Migrating pkg: {pkg}')
                     self.mk_proj_dir(cr, pkg)
                     db.insert_pkg({'name':pkg, 'CR':cr})
-                    
-                
-                
-                
 
     def spawn(self):
         self.time = datetime.datetime.now()
@@ -351,7 +347,7 @@ class OpenProjWin:
 
         r_col= [
             [sg.Frame('Stats:',layout=[[sg.Text(f'Packages: {self.stats.get("total")}')],[sg.Text(f'Completed: {self.stats.get("complete")}')],[sg.Text(f'In-Progress: {self.stats.get("in_prog")}')],
-                                        [sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')]])
+                                        [sg.Text(f'New: {self.stats.get("new")}')],[sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')]])
                 ],
         ]
 
@@ -380,9 +376,10 @@ class OpenProjWin:
         total = len(db.db.all())
         complete = len(db.db.search(db.Pkg.PROJ_STATUS == 'COMPLETE'))
         in_prog = len(db.db.search(db.Pkg.PROJ_STATUS == 'IN-PROGRESS'))
+        new = len(db.db.search(db.Pkg.PROJ_STATUS == 'NEW'))
         failed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'FAIL'))
         passed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'PASS'))
-        self.stats.update({'total':total, 'complete':complete, 'in_prog':in_prog, 'failed':failed, 'passed':passed})
+        self.stats.update({'total':total, 'complete':complete, 'in_prog':in_prog,'new':new, 'failed':failed, 'passed':passed})
             
     def migrate_all(self):
         all_pkgs = {}
