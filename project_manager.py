@@ -334,6 +334,7 @@ class OpenProjWin:
         self.competion_status = []
 
         self.load_CRs()
+        self.get_stats()
 
         l_col = [
             [sg.Text('CR Number: '), sg.Combo(self.crs, size=(
@@ -348,8 +349,14 @@ class OpenProjWin:
             ])]
         ]
 
+        r_col= [
+            [sg.Frame('Stats:',layout=[[sg.Text(f'Packages: {self.stats.get("total")}')],[sg.Text(f'Completed: {self.stats.get("complete")}')],[sg.Text(f'In-Progress: {self.stats.get("in_prog")}')],
+                                        [sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')]])
+                ],
+        ]
+
         self.layout = [
-            [sg.Column(l_col)],
+            [sg.Column(l_col), sg.Column(r_col)],
             [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
         ]
 
@@ -367,6 +374,15 @@ class OpenProjWin:
         for dir in os.listdir(PM_DIR+cr):
             if os.path.isdir(PM_DIR+cr+'/'+dir):
                 self.packages.append(dir)
+
+    def get_stats(self):
+        self.stats = {}
+        total = len(db.db.all())
+        complete = len(db.db.search(db.Pkg.PROJ_STATUS == 'COMPLETE'))
+        in_prog = len(db.db.search(db.Pkg.PROJ_STATUS == 'IN-PROGRESS'))
+        failed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'FAIL'))
+        passed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'PASS'))
+        self.stats.update({'total':total, 'complete':complete, 'in_prog':in_prog, 'failed':failed, 'passed':passed})
             
     def migrate_all(self):
         all_pkgs = {}
