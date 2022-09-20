@@ -346,8 +346,8 @@ class OpenProjWin:
         ]
 
         r_col= [
-            [sg.Frame('Stats:',layout=[[sg.Text(f'Packages: {self.stats.get("total")}')],[sg.Text(f'Completed: {self.stats.get("complete")}')],[sg.Text(f'In-Progress: {self.stats.get("in_prog")}')],
-                                        [sg.Text(f'New: {self.stats.get("new")}')],[sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')]])
+            [sg.Frame('Stats:',layout=[[sg.Text(f'Packages: {self.stats.get("total")}')],[sg.HorizontalSeparator()],[sg.Text(f'New: {self.stats.get("new")}')],[sg.Text(f'In-Progress: {self.stats.get("in_prog")}')],[sg.Text(f'Completed: {self.stats.get("complete")}')],
+                                       [sg.Text(f'Rework: {self.stats.get("rework")}')],[sg.HorizontalSeparator()],[sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')], [sg.Text(f'Unknown: {self.stats.get("unknown")}')]])
                 ],
         ]
 
@@ -376,10 +376,12 @@ class OpenProjWin:
         total = len(db.db.all())
         complete = len(db.db.search(db.Pkg.PROJ_STATUS == 'COMPLETE'))
         in_prog = len(db.db.search(db.Pkg.PROJ_STATUS == 'IN-PROGRESS'))
+        rework = len(db.db.search(db.Pkg.PROJ_STATUS == 'REWORK'))
         new = len(db.db.search(db.Pkg.PROJ_STATUS == 'NEW'))
         failed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'FAIL'))
         passed = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'PASS'))
-        self.stats.update({'total':total, 'complete':complete, 'in_prog':in_prog,'new':new, 'failed':failed, 'passed':passed})
+        unknown = len(db.db.search(db.Pkg.PROJ_DISPOSITION == 'UNKNOWN'))
+        self.stats.update({'total':total, 'complete':complete, 'in_prog':in_prog,'rework':rework,'new':new, 'failed':failed, 'passed':passed, 'unknown':unknown})
             
     def migrate_all(self):
         all_pkgs = {}
