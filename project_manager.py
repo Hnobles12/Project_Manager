@@ -103,9 +103,9 @@ class ProjWin:
         ]
 
         top_row_details_frame = sg.Frame("Task Details:",
-                                         layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), ],
+                                         layout=[[sg.Text('CR:', size=(10, 1)), sg.InputText(self.cr, disabled=True, size=(28, 1)), sg.Text(f'Created: {self.proj_data.get("created")}')],
                                                  [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
-                                                     28, 1)), ],
+                                                     28, 1)),sg.Text(f'Updated: {self.proj_data.get("updated")}') ],
                                                  [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
                                                      "PROJ_IO"), size=(28, 1))]])
 
@@ -116,6 +116,8 @@ class ProjWin:
         top_row_model_details_frame2 = sg.Frame('Model Details:', layout=[
             [sg.Column(layout=[[sg.Text('Models: ', size=(15, 1))],[sg.Button('Open', key='_OPEN_MODEL_'), sg.FilesBrowse('Add Files',enable_events=True, target='_ADD_MODEL_FILES_', key='_ADD_MODEL_FILES_', initial_folder=self.proj_path+'/Models')]]), sg.Listbox(self.models_files, key='_MODELS_LB_', size=(20, 4)), ],
         ])
+
+        top_row_stats_frame = sg.Frame('Details:', layout=[[sg.Text(f'Created: {self.proj_data.get("created")}')],[sg.Text(f'Updated: {self.proj_data.get("updated")}')]])
 
         self.layout = [
             [top_row_details_frame, top_row_model_details_frame,
@@ -207,6 +209,7 @@ class ProjWin:
                 self.proj_data['PROJ_TODOS'] = values['_PROJ_TODOS_']
                 self.proj_data['PROJ_IO'] = values['_PROJ_IO_']
                 self.proj_data['PROJ_TVE'] = values['_PROJ_TVE_']
+                self.proj_data['updated'] = datetime.datetime.now().isoformat()
                 self.save_project_data()
                 self.get_proj_files()
                 self.window['_DOC_LB_'].update(values=self.doc_files)
@@ -307,7 +310,7 @@ class NewProjWin:
                     sg.popup('Project(s) already exist at location.')
                     continue
 
-                db.insert_pkg({'name': pkg, 'CR': cr})
+                db.insert_pkg({'name': pkg, 'CR': cr, 'created':datetime.datetime.now().isoformat()})
 
                 self.window.close()
 
