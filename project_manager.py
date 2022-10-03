@@ -16,7 +16,7 @@ PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
 COMPLETION_STATUS = ['NEW', 'IN-PROGRESS', 'COMPLETE', 'REWORK']
 DISPOSITION = ['PASS', 'FAIL', 'UNKNOWN']
-sg.theme('Topanga')
+sg.theme('DarkBlack1')
 
 
 def copy2clip(txt):
@@ -142,14 +142,17 @@ class ProjWin:
                 doc_files.append(file)
 
         for file in os.listdir(self.proj_path+"Analysis"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Analysis/{file}")):
-                analysis_files.append(file)
+            # if os.path.isfile(os.path.join(self.proj_path, f"Analysis/{file}")):
+            #     analysis_files.append(file)
+            analysis_files.append(file)
         for file in os.listdir(self.proj_path+"Results"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Results/{file}")):
-                results_files.append(file)
+            # if os.path.isfile(os.path.join(self.proj_path, f"Results/{file}")):
+            #     results_files.append(file)
+            results_files.append(file)
         for file in os.listdir(self.proj_path+"Models"):
-            if os.path.isfile(os.path.join(self.proj_path, f"Models/{file}")):
-                models_files.append(file)
+            # if os.path.isfile(os.path.join(self.proj_path, f"Models/{file}")):
+            #     models_files.append(file)
+            models_files.append(file)
 
         self.doc_files = doc_files
         self.analysis_files = analysis_files
@@ -187,18 +190,32 @@ class ProjWin:
             elif event == "_CPY_IO_":
                 copy2clip(f'{self.io}'.strip().strip('/n'))
             elif event == '_OPEN_DOC_':
+                if self.window["_DOC_LB_"].get_indexes() == ():
+                    os.startfile(self.proj_path+'Documentation')
+                
                 for i in self.window['_DOC_LB_'].get_indexes():
                     os.startfile(self.proj_path +
                                  'Documentation/'+self.doc_files[i])
+                    break
+                
             elif event == '_OPEN_ANALYSIS_':
+                if self.window["_ANAL_LB_"].get_indexes() == ():
+                    os.startfile(self.proj_path+'Analysis')
+                
                 for i in self.window['_ANAL_LB_'].get_indexes():
                     os.startfile(self.proj_path+'Analysis/' +
                                  self.analysis_files[i])
             elif event == '_OPEN_RESULTS_':
+                if self.window["_RES_LB_"].get_indexes() == ():
+                    os.startfile(self.proj_path+'Results')
+
                 for i in self.window['_RES_LB_'].get_indexes():
                     os.startfile(self.proj_path+'Results/' +
                                  self.results_files[i])
             elif event == '_OPEN_MODEL_':
+                if self.window["_MODELS_LB_"].get_indexes() == ():
+                    os.startfile(self.proj_path+'Models')
+
                 for i in self.window['_MODELS_LB_'].get_indexes():
                     os.startfile(self.proj_path+'Models/' +
                                  self.models_files[i])
