@@ -8,6 +8,8 @@ import shutil
 import datetime
 import tinydb as tdb
 
+PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
+
 PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
 #PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
 PM_DB_FILE = PM_DIR+'pm_db.json'
@@ -79,7 +81,7 @@ class ProjWin:
         print('proj_data: ', self.proj_data)
 
         l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(125, 10), key="_DOC_LB_")],
-                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False)]])],
+                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False), sg.Button("PDM WL", key='_OPEN_PDM_WL_')]])],
 
                         [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(125, 10), key="_ANAL_LB_")],
                                                        [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_',initial_folder=self.proj_path+'/Analysis')]])],
@@ -197,7 +199,11 @@ class ProjWin:
                     os.startfile(self.proj_path +
                                  'Documentation/'+self.doc_files[i])
                     break
-                
+            elif event == "_OPEN_PDM_WL_":
+                try:
+                    os.startfile(PDM_WL)
+                except FileNotFoundError:
+                    print("Error: Cannot open PDM Work Location. File not found.")
             elif event == '_OPEN_ANALYSIS_':
                 if self.window["_ANAL_LB_"].get_indexes() == ():
                     os.startfile(self.proj_path+'Analysis')
@@ -444,7 +450,7 @@ class OpenProjWin:
                 self.packages = []
                 names = db.get_pkg_names()
                 for name in names:
-                    if values['_PKG_NAME_'] in name:
+                    if values['_PKG_NAME_'].upper() in name:
                         self.packages.append(name)
                 print(names)
                 self.window['_PKG_LB_'].update(values=self.packages)
