@@ -166,7 +166,8 @@ class ProjWin:
         self.models_files = models_files
 
     def load_proj_data(self):
-        proj_data = db.get_pkg_w_cr(self.pkg, self.cr)
+        # proj_data = db.get_pkg_w_cr(self.pkg, self.cr)
+        proj_data = db.get_pkg(self.pkg)
         print(f'Proj_data: {proj_data}')
         self.proj_data = proj_data[0]
 
