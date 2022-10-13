@@ -35,6 +35,10 @@ class Db:
     def get_pkg(self, pkg_name):
         pkg_data = self.db.search(self.Pkg.name == pkg_name)
         return pkg_data
+    
+    def get_pkg_w_cr(self, pkg_name, CR):
+        pkg_data = self.db.search(self.Pkg.name == pkg_name and self.Pkg.CR == CR)
+        return pkg_data
 
     def get_pkg_names(self) -> list[str]:
         return [d.get('name') for d in self.db.all()]
@@ -57,7 +61,7 @@ class Db:
     def update_pkg(self, pkg_name, pkg_dict):
 
         for pkg in self.get_pkg(pkg_name):
-            self.db.update(pkg_dict, self.Pkg.name == pkg_name)
+            self.db.update(pkg_dict, self.Pkg.name == pkg_name and self.Pkg.CR == pkg_dict.get("CR"))
 
 
 # Windows:
@@ -162,7 +166,9 @@ class ProjWin:
         self.models_files = models_files
 
     def load_proj_data(self):
-        self.proj_data = db.get_pkg(self.pkg)[0]
+        proj_data = db.get_pkg_w_cr(self.pkg, self.cr)
+        print(f'Proj_data: {proj_data}')
+        self.proj_data = proj_data[0]
 
     def save_project_data(self):
         db.update_pkg(self.pkg, self.proj_data)
