@@ -97,7 +97,7 @@ class ProjWin:
                 'PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
-                'PROJ_NOTES'), size=(75, 15), key='_PROJ_NOTES_')]])],
+                'PROJ_NOTES') or "PKG: \n\nCN TITLE: \n\nCN DESCRIPTION: \n", size=(75, 15), key='_PROJ_NOTES_')]])],
             [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get(
                 'PROJ_TODOS'), size=(75, 15), key='_PROJ_TODOS_')]])],
             [sg.Button("Save", key="_UPDATE_STATUS_", bind_return_key=True), sg.Button(
