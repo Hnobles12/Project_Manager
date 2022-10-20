@@ -101,7 +101,7 @@ class ProjWin:
                 'PROJ_DISPOSITION'), key="_DISP_COMBO_", size=(10, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
-                'PROJ_NOTES'), size=(75, 15), key='_PROJ_NOTES_')]])],
+                'PROJ_NOTES') or "PKG: \n\nCN TITLE: \n\nCN DESCRIPTION: \n", size=(75, 15), key='_PROJ_NOTES_')]])],
             [sg.Frame("TODOs:", layout=[[sg.Multiline(default_text=self.proj_data.get(
                 'PROJ_TODOS'), size=(75, 15), key='_PROJ_TODOS_')]])],
             [sg.Button("Save", key="_UPDATE_STATUS_", bind_return_key=True), sg.Button(
@@ -120,7 +120,7 @@ class ProjWin:
                 self.proj_data.get('PROJ_TVE'), autoscroll=True, key='_PROJ_TVE_', size=(40, 5))],
         ])
         top_row_model_details_frame2 = sg.Frame('Model Details:', layout=[
-            [sg.Column(layout=[[sg.Text('Models: ', size=(15, 1))],[sg.Button('Open', key='_OPEN_MODEL_'), sg.FilesBrowse('Add Files',enable_events=True, target='_ADD_MODEL_FILES_', key='_ADD_MODEL_FILES_', initial_folder=self.proj_path+'/Models')]]), sg.Listbox(self.models_files, key='_MODELS_LB_', size=(20, 4)), ],
+            [sg.Column(layout=[[sg.Text('Models: ', size=(15, 1))],[sg.Button('Open', key='_OPEN_MODEL_'), sg.FilesBrowse('Add Files',enable_events=True, target='_ADD_MODEL_FILES_', key='_ADD_MODEL_FILES_', initial_folder=self.proj_path+'/Models')]]), sg.Listbox(self.models_files, key='_MODELS_LB_', size=(30, 5)), ],
         ])
 
         top_row_stats_frame = sg.Frame('Details:', layout=[[sg.Text(f'Created: {self.proj_data.get("created")}')],[sg.Text(f'Updated: {self.proj_data.get("updated")}')]])
