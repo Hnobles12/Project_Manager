@@ -432,6 +432,11 @@ class OpenProjWin:
         print('Migration Complete.')
 
     def spawn(self):
+        self.packages = db.get_pkg_names() # load all packages with newest first
+        self.packages.reverse()
+        self.window['_PKG_LB_'].update(values=self.packages)
+        self.window.refresh()
+        
         while True:
             event, values = self.window.read()
             print(event)
