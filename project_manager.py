@@ -283,7 +283,7 @@ class NewProjWin:
             [sg.Text('New Project')],
             [sg.Text("CR/Proj Number: ", size=(20, 1)), sg.InputText()],
             [sg.Text("Pkg. Number (Name): ", size=(20, 1)), sg.InputText()],
-            [sg.Button("Create", bind_return_key=True)]
+            [sg.Button("Create", bind_return_key=True), sg.Button("Back")]
 
 
         ]
@@ -339,8 +339,10 @@ class NewProjWin:
 
                 proj_win = ProjWin(cr, pkg)
                 proj_win.spawn()
-            elif datetime.datetime.now() - self.time > 10:
-                pass
+            # elif datetime.datetime.now() - self.time > 10:
+            #     pass
+            elif event == "Back":
+                self.window.close()
 
         self.window.close()
 
@@ -379,7 +381,7 @@ class OpenProjWin:
 
         self.layout = [
             [sg.Column(l_col), sg.Column(r_col)],
-            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button("Back"), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
         ]
 
         self.window = sg.Window(
@@ -477,6 +479,8 @@ class OpenProjWin:
                 self.window.close()
                 proj_win = ProjWin(cr, pkg)
                 proj_win.spawn()
+            elif event=="Back":
+                self.window.close()
 
         self.window.close()
 
