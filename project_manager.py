@@ -12,6 +12,7 @@ PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
 FC_EXE = "C:/Users/e433679/Programs/FreeCommanderXE/FreeCommander.exe"
 
 PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
+# PM_DIR_UNIX = '/c/Users/e433679/Documents/Project_Manager/'
 #PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
 PM_DB_FILE = PM_DIR+'pm_db.json'
 
@@ -67,14 +68,16 @@ class Db:
 
 class ProjWin:
 
-    def __init__(self, cr, pkg):
+    def __init__(self, cr, pkg, new=False):
         self.cr = cr
         self.pkg = pkg
+        self.new = new
 
         self.width = 1000
         self.height = 250
 
         self.proj_path = PM_DIR + f"{self.cr}/{self.pkg}/"
+        os.environ["PM_CWD"] = self.proj_path        
 
         self.get_proj_files()
         self.load_proj_data()
@@ -179,6 +182,9 @@ class ProjWin:
     def spawn(self):
         while True:
             event, values = self.window.read()
+
+            if self.new:
+                event = "_UPDATE_STATUS_"
 
             print(event)
 
@@ -341,7 +347,7 @@ class NewProjWin:
 
                 self.window.close()
 
-                proj_win = ProjWin(cr, pkg)
+                proj_win = ProjWin(cr, pkg, new=True)
                 proj_win.spawn()
             # elif datetime.datetime.now() - self.time > 10:
             #     pass
