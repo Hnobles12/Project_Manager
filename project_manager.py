@@ -183,8 +183,8 @@ class ProjWin:
         while True:
             event, values = self.window.read()
 
-            if self.new:
-                event = "_UPDATE_STATUS_"
+            # if self.new:
+            #     event = "_UPDATE_STATUS_"
 
             print(event)
 
