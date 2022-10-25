@@ -96,9 +96,9 @@ class ProjWin:
 
         r_col_layout = [[sg.Frame('Work Status:', layout=[
             [sg.Text("Task Status: ", size=(10, 1)), sg.Combo(COMPLETION_STATUS,
-                                                              default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(10, 1))],
+                                                              default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(12, 1))],
             [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(DISPOSITION, default_value=self.proj_data.get(
-                'PROJ_DISPOSITION' or "UNKNOWN"), key="_DISP_COMBO_", size=(10, 1))],
+                'PROJ_DISPOSITION' or "UNKNOWN"), key="_DISP_COMBO_", size=(12, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
                 'PROJ_NOTES') or "PKG: \n\nCN TITLE: \n\nCN DESCRIPTION: \n", size=(75, 15), key='_PROJ_NOTES_')]])],
