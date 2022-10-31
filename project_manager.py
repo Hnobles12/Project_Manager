@@ -281,6 +281,26 @@ class ProjWin:
         
         self.window.refresh()
 
+    def save_all(self, values):
+        if self.new:
+            self.new = False
+
+        self.proj_data['PROJ_STATUS'] = values['_STAT_COMBO_']
+        self.proj_data['PROJ_DISPOSITION'] = values['_DISP_COMBO_']
+        self.proj_data['PROJ_NOTES'] = values["_PROJ_NOTES_"]
+        self.proj_data['PROJ_TODOS'] = values['_PROJ_TODOS_']
+        self.proj_data['PROJ_IO'] = values['_PROJ_IO_']
+        self.proj_data['PROJ_TVE'] = values['_PROJ_TVE_']
+        self.proj_data['updated'] = datetime.datetime.now().isoformat()
+        self.save_project_data()
+        self.get_proj_files()
+
+        self.refresh_window()
+
+        if self.git_status:
+            self.commit_changes()
+        
+        self.refresh_window(check_git=False)
 
     def spawn(self):
         while True:
@@ -296,9 +316,11 @@ class ProjWin:
             print(event)
 
             if event == "Exit" or event == sg.WIN_CLOSED or event == "Quit":
+                self.save_all(values)
                 break
-            elif event == "Quit":
-                break
+            # elif event == "Quit":
+            #     self.save_all(values)
+            #     break
             elif event == "_CPY_CR_":
                 copy2clip(f'{self.cr}'.strip().strip('/n'))
             elif event == "_CPY_PKG_":
@@ -340,24 +362,7 @@ class ProjWin:
                     os.startfile(self.proj_path+'Models/' +
                                  self.models_files[i])
             elif event == '_UPDATE_STATUS_':
-                if self.new:
-                    self.new = False
-                self.proj_data['PROJ_STATUS'] = values['_STAT_COMBO_']
-                self.proj_data['PROJ_DISPOSITION'] = values['_DISP_COMBO_']
-                self.proj_data['PROJ_NOTES'] = values["_PROJ_NOTES_"]
-                self.proj_data['PROJ_TODOS'] = values['_PROJ_TODOS_']
-                self.proj_data['PROJ_IO'] = values['_PROJ_IO_']
-                self.proj_data['PROJ_TVE'] = values['_PROJ_TVE_']
-                self.proj_data['updated'] = datetime.datetime.now().isoformat()
-                self.save_project_data()
-                self.get_proj_files()
-
-                self.refresh_window()
-
-                if self.git_status:
-                    self.commit_changes()
-                
-                self.refresh_window(check_git=False)
+                self.save_all(values) 
 
             elif event == '_ADD_DOC_FILES_':
                 self.add_files(self.proj_path+"/Documentation",
