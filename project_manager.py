@@ -97,8 +97,7 @@ class ProjWin:
         r_col_layout = [[sg.Frame('Work Status:', layout=[
             [sg.Text("Task Status: ", size=(10, 1)), sg.Combo(COMPLETION_STATUS,
                                                               default_value=self.proj_data.get('PROJ_STATUS') or "NEW", key="_STAT_COMBO_", size=(12, 1))],
-            [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(DISPOSITION, default_value=self.proj_data.get(
-                'PROJ_DISPOSITION' or "UNKNOWN"), key="_DISP_COMBO_", size=(12, 1))],
+            [sg.Text("Disposition: ", size=(10, 1)), sg.Combo(DISPOSITION, default_value=self.proj_data.get("PROJ_DISP") or "UNKNOWN", key="_DISP_COMBO_", size=(12, 1))],
         ], border_width=1)],
             [sg.Frame("Notes:", layout=[[sg.Multiline(default_text=self.proj_data.get(
                 'PROJ_NOTES') or "PKG: \n\nCN TITLE: \n\nCN DESCRIPTION: \n", size=(75, 15), key='_PROJ_NOTES_')]])],
@@ -181,10 +180,14 @@ class ProjWin:
 
     def spawn(self):
         while True:
-            event, values = self.window.read()
 
-            # if self.new:
-            #     event = "_UPDATE_STATUS_"
+            if self.new:
+                event, values = self.window.read(timeout=250)
+                event = "_UPDATE_STATUS_"
+                
+            
+            else:
+                event, values = self.window.read()
 
             print(event)
 
@@ -233,6 +236,8 @@ class ProjWin:
                     os.startfile(self.proj_path+'Models/' +
                                  self.models_files[i])
             elif event == '_UPDATE_STATUS_':
+                if self.new:
+                    self.new = False
                 self.proj_data['PROJ_STATUS'] = values['_STAT_COMBO_']
                 self.proj_data['PROJ_DISPOSITION'] = values['_DISP_COMBO_']
                 self.proj_data['PROJ_NOTES'] = values["_PROJ_NOTES_"]
