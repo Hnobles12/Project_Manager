@@ -7,6 +7,7 @@ import yaml
 import shutil
 import datetime
 import tinydb as tdb
+import gitpython as gp
 
 PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
 FC_EXE = "C:/Users/e433679/Programs/FreeCommanderXE/FreeCommander.exe"
