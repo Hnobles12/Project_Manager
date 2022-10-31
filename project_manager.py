@@ -7,7 +7,10 @@ import yaml
 import shutil
 import datetime
 import tinydb as tdb
-import gitpython as gp
+import git
+
+GIT_USER = "user"
+GIT_USER_EMAIL = "user@domain.com"
 
 PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
 FC_EXE = "C:/Users/e433679/Programs/FreeCommanderXE/FreeCommander.exe"
@@ -82,6 +85,8 @@ class ProjWin:
 
         self.get_proj_files()
         self.load_proj_data()
+        
+        self.load_repo()
 
         print('proj_data: ', self.proj_data)
 
@@ -136,7 +141,7 @@ class ProjWin:
                                 layout=self.layout, resizable=True, finalize=True)
         
         self.window.bind('<Ctrl_L><s>', '_UPDATE_STATUS_')
-
+        
     def get_proj_files(self):
         doc_files = []
         analysis_files = []
@@ -164,6 +169,82 @@ class ProjWin:
         self.analysis_files = analysis_files
         self.results_files = results_files
         self.models_files = models_files
+        
+    def load_repo(self):
+        self.actor = git.Actor(GIT_USER, GIT_USER_EMAIL)
+        
+        try: 
+            self.repo = git.Repo(self.proj_path)
+            print("GIT: Repo found.")
+        except git.InvalidGitRepositoryError:
+            self.repo = git.Repo.init(self.proj_path)
+            print("GIT: Creating repo.")
+            
+        if self.repo.is_dirty():
+            print("GIT: Working tree is dirty.")
+        else:
+            print("GIT: Working tree is clean.")
+            
+        self.untracked = self.repo.untracked_files
+        
+        # print(f"Untracked files: {self.untracked}")
+        
+    def check_repo_files(self)-> bool:
+        self.untracked = self.repo.untracked_files
+        self.modified = [item.a_path for item in self.repo.index.diff(None)]
+        self.index = self.repo.index
+        if len(self.untracked) != 0 or self.repo.is_dirty():
+            print(f"GIT: Adding untracked files: {self.untracked}")
+            self.index.add(self.untracked)
+            print(f"GIT: Added untracked files.")
+            # print(f"GIT: Adding modified files: {self.modified}")
+            # self.index.add(all=True)
+            # self.index.add(self.modified)
+            # print(f"GIT: Added modified files.")
+            self.repo.git.add(all=True)
+            print("GIT: Added all files.")
+            return True
+        
+        elif self.repo.is_dirty(): return True
+        
+        else: return False
+             
+    def commit_msg_popup(self) -> str:
+        layout = [[sg.Text("Enter Commit Message")],
+                      [sg.InputText(default_text='', size=(40, 3), key='COMMIT_MSG')],
+                      [sg.Button("Commit Changes",key="COMMIT", bind_return_key=True), sg.Button("Cancel")]]
+        window = sg.Window("Commit Message", layout, modal=True, finalize=True)
+        while True:
+            event, values = window.read()
+            if event == "COMMIT":
+                if values["COMMIT_MSG"] == '':
+                    sg.Popup("Commit message box empty, please enter commit message.")
+                    continue
+                elif values["COMMIT_MSG"] == None:
+                    message = None
+                    break
+                else:
+                    message = values["COMMIT_MSG"]
+                    break
+                
+            elif event == "Cancel":
+                message = None
+                break
+        window.close()
+        return message
+    
+    def commit_changes(self):
+        message = self.commit_msg_popup()
+        print(f"GIT: Committed changes with msg: \"{message}\"")
+        if message != None and message != '':
+            self.index.commit(message, author=self.actor, committer=self.actor)
+        elif message == '':
+            sg.Popup()
+        else:
+            sg.Popup("Canceled commit action, working tree is still dirty.")
+            
+            
+            
 
     def load_proj_data(self):
         self.proj_data = db.get_pkg(self.pkg)[0]
@@ -252,6 +333,11 @@ class ProjWin:
                 self.window['_ANAL_LB_'].update(values=self.analysis_files)
                 self.window['_RES_LB_'].update(values=self.results_files)
                 self.window['_MODELS_LB_'].update(values=self.models_files)
+                
+                if self.check_repo_files():
+                    self.commit_changes()
+                
+                
                 self.window.refresh()
             elif event == '_ADD_DOC_FILES_':
                 self.add_files(self.proj_path+"/Documentation",
