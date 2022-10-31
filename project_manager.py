@@ -118,7 +118,7 @@ class ProjWin:
                                                  [sg.Text(f'PKG/TASK:', size=(10, 1)), sg.InputText(self.pkg, disabled=True, size=(
                                                      28, 1)),sg.Text(f'Updated: {self.proj_data.get("updated")}') ],
                                                  [sg.Text(f"IO:", size=(10, 1)), sg.InputText(key='_PROJ_IO_', default_text=self.proj_data.get(
-                                                     "PROJ_IO"), size=(28, 1))]])
+                                                     "PROJ_IO"), size=(28, 1)), sg.Text(f"GIT Status: {'CLEAN' if not self.git_status else 'DIRTY'}", key="_GIT_STAT_")]])
 
         top_row_model_details_frame = sg.Frame('TVE Details:', layout=[
             [sg.Text('TVE: ', size=(15, 1)), sg.Multiline(
@@ -185,7 +185,7 @@ class ProjWin:
         else:
             print("GIT: Working tree is clean.")
             
-        self.untracked = self.repo.untracked_files
+        self.check_repo_files()
         
         # print(f"Untracked files: {self.untracked}")
         
@@ -203,11 +203,19 @@ class ProjWin:
             # print(f"GIT: Added modified files.")
             self.repo.git.add(all=True)
             print("GIT: Added all files.")
+            self.git_status = True
             return True
         
-        elif self.repo.is_dirty(): return True
+        elif self.repo.is_dirty(): 
+            self.git_status=True
+            return True
         
-        else: return False
+        else: 
+            # self.repo.git.add(all=True)
+            # print("GIT: Added all files.")
+            print("GIT: Working tree is clean.")
+            self.git_status = False
+            return False
              
     def commit_msg_popup(self) -> str:
         layout = [[sg.Text("Enter Commit Message")],
@@ -238,10 +246,10 @@ class ProjWin:
         print(f"GIT: Committed changes with msg: \"{message}\"")
         if message != None and message != '':
             self.index.commit(message, author=self.actor, committer=self.actor)
-        elif message == '':
-            sg.Popup()
+            self.git_status = False # reset status to clean
         else:
             sg.Popup("Canceled commit action, working tree is still dirty.")
+            
             
             
             
@@ -260,6 +268,20 @@ class ProjWin:
                 continue
             shutil.copy2(file, dir)
 
+    def refresh_window(self, check_git=True):
+        self.get_proj_files()
+        self.window['_DOC_LB_'].update(values=self.doc_files)
+        self.window['_ANAL_LB_'].update(values=self.analysis_files)
+        self.window['_RES_LB_'].update(values=self.results_files)
+        self.window['_MODELS_LB_'].update(values=self.models_files)
+        if check_git: 
+            self.check_repo_files()
+            
+        self.window["_GIT_STAT_"].update(f"GIT Status: {'CLEAN' if not self.git_status else 'DIRTY'}")
+        
+        self.window.refresh()
+
+
     def spawn(self):
         while True:
 
@@ -273,7 +295,7 @@ class ProjWin:
 
             print(event)
 
-            if event == "Exit" or event == sg.WIN_CLOSED:
+            if event == "Exit" or event == sg.WIN_CLOSED or event == "Quit":
                 break
             elif event == "Quit":
                 break
@@ -329,16 +351,14 @@ class ProjWin:
                 self.proj_data['updated'] = datetime.datetime.now().isoformat()
                 self.save_project_data()
                 self.get_proj_files()
-                self.window['_DOC_LB_'].update(values=self.doc_files)
-                self.window['_ANAL_LB_'].update(values=self.analysis_files)
-                self.window['_RES_LB_'].update(values=self.results_files)
-                self.window['_MODELS_LB_'].update(values=self.models_files)
-                
-                if self.check_repo_files():
+
+                self.refresh_window()
+
+                if self.git_status:
                     self.commit_changes()
                 
-                
-                self.window.refresh()
+                self.refresh_window(check_git=False)
+
             elif event == '_ADD_DOC_FILES_':
                 self.add_files(self.proj_path+"/Documentation",
                                values['_ADD_DOC_FILES_'])
@@ -364,14 +384,10 @@ class ProjWin:
                 self.window['_MODEL_LB_'].update(values=self.models_files)
                 self.window.refresh()
             elif event == '_REFRESH_':
-                self.get_proj_files()
-                self.window['_DOC_LB_'].update(values=self.doc_files)
-                self.window['_ANAL_LB_'].update(values=self.analysis_files)
-                self.window['_RES_LB_'].update(values=self.results_files)
-                self.window['_MODELS_LB_'].update(values=self.models_files)
-                self.window.refresh()
+               self.refresh_window() 
             elif event == "_OPEN_FC_":
                 subprocess.Popen([FC_EXE, "-c", self.proj_path])
+
                 
 
         self.window.close()
