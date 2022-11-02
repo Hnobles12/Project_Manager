@@ -14,7 +14,7 @@ GIT_USER_EMAIL = "user@domain.com"
 
 PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
 FC_EXE = "C:/Users/e433679/Programs/FreeCommanderXE/FreeCommander.exe"
-
+GHD_EXE = "C:/Users/e433679/AppData/Local/GitHubDesktop/GitHubDesktop.exe"
 PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
 # PM_DIR_UNIX = '/c/Users/e433679/Documents/Project_Manager/'
 #PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
@@ -91,7 +91,7 @@ class ProjWin:
         print('proj_data: ', self.proj_data)
 
         l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(125, 10), key="_DOC_LB_")],
-                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False), sg.Button("PDM WL", key='_OPEN_PDM_WL_'), sg.Button("FC", key="_OPEN_FC_")]])],
+                                                            [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False), sg.Button("PDM WL", key='_OPEN_PDM_WL_'), sg.Button("FC", key="_OPEN_FC_"), sg.Button('Github Desktop',key="_OPEN_GHD_")]])],
 
                         [sg.Frame('Analysis:', layout=[[sg.Listbox(values=self.analysis_files, size=(125, 10), key="_ANAL_LB_")],
                                                        [sg.Button('Open', key='_OPEN_ANALYSIS_'), sg.FilesBrowse('Add Files', enable_events=True, target="_ADD_ANAL_FILES_", key='_ADD_ANAL_FILES_',initial_folder=self.proj_path+'/Analysis')]])],
@@ -392,6 +392,8 @@ class ProjWin:
                self.refresh_window() 
             elif event == "_OPEN_FC_":
                 subprocess.Popen([FC_EXE, "-c", self.proj_path])
+            elif event == '_OPEN_GHD_':
+                subprocess.Popen([GHD_EXE, self.proj_path])
 
                 
 
