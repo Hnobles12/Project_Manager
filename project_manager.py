@@ -494,7 +494,7 @@ class OpenProjWin:
                                                    enable_events=True, change_submits=True)],
             [sg.Frame('Packages/Tasks', layout=[
                 [sg.Listbox(
-                    self.packages, key="_PKG_LB_", size=(30, 10))],
+                    self.packages, key="_PKG_LB_", size=(30, 10), enable_events=True)],
             ])]
         ]
 
@@ -502,11 +502,15 @@ class OpenProjWin:
             [sg.Frame('Stats:',layout=[[sg.Text(f'Packages: {self.stats.get("total")}')],[sg.HorizontalSeparator()],[sg.Text(f'New: {self.stats.get("new")}')],[sg.Text(f'In-Progress: {self.stats.get("in_prog")}')],[sg.Text(f'Completed: {self.stats.get("complete")}')],
                                        [sg.Text(f'Rework: {self.stats.get("rework")}')],[sg.HorizontalSeparator()],[sg.Text(f'Passed: {self.stats.get("passed")}')], [sg.Text(f'Failed: {self.stats.get("failed")}')], [sg.Text(f'Unknown: {self.stats.get("unknown")}')]])
                 ],
+            
         ]
 
         self.layout = [
             [sg.Column(l_col), sg.Column(r_col)],
-            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button("Back"), sg.Button('Migrate Pkgs',key='_MIGRATE_')]
+            [sg.Text('Notes: ')],
+            [sg.Multiline('', disabled=True, autoscroll=True, key='_SEL_NOTES_', size=(60,10))],
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button("Back"), sg.Button('Migrate Pkgs',key='_MIGRATE_')],
+            
         ]
 
         self.window = sg.Window(
@@ -587,6 +591,17 @@ class OpenProjWin:
                 print(names)
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
+            elif event == '_PKG_LB_':
+                pkg = db.get_pkg(values['_PKG_LB_'][0])
+
+                if len(pkg) != 1:
+                    notes = 'NOTES NOT FOUND.'
+                else:
+                    notes = pkg[0]['PROJ_NOTES']
+                    
+                self.window['_SEL_NOTES_'].update(notes)
+                self.window.refresh()
+                    
             elif event == '_MIGRATE_':
                 self.migrate_all()
             elif event == "_OPEN_PROJ_":
