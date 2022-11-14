@@ -8,6 +8,7 @@ import shutil
 import datetime
 import tinydb as tdb
 import git
+import logging as lg
 
 GIT_USER = "user"
 GIT_USER_EMAIL = "user@domain.com"
@@ -19,6 +20,10 @@ PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
 # PM_DIR_UNIX = '/c/Users/e433679/Documents/Project_Manager/'
 #PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
 PM_DB_FILE = PM_DIR+'pm_db.json'
+
+PM_LOG_FILE = PM_DIR+'project_manager.log'
+
+lg.basicConfig(filename=PM_LOG_FILE, filemode='w', format="%(asctime)s | %(levelname)s | %(message)s", level=lg.DEBUG)
 
 PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
 
@@ -214,14 +219,17 @@ class ProjWin:
         self.index = self.repo.index
         if len(self.untracked) != 0 or self.repo.is_dirty():
             print(f"GIT: Adding untracked files: {self.untracked}")
+            lg.info(f"GIT: {self.pkg} Adding untracked files: {self.untracked}")
             self.index.add(self.untracked)
             print(f"GIT: Added untracked files.")
+            lg.info(f"GIT: {self.pkg} Added untracked files.")
             # print(f"GIT: Adding modified files: {self.modified}")
             # self.index.add(all=True)
             # self.index.add(self.modified)
             # print(f"GIT: Added modified files.")
             self.repo.git.add(all=True)
             print("GIT: Added all files.")
+            lg.info(f"GIT: {self.pkg} Added all files.")
             self.git_status = True
             return True
         
@@ -233,6 +241,8 @@ class ProjWin:
             # self.repo.git.add(all=True)
             # print("GIT: Added all files.")
             print("GIT: Working tree is clean.")
+            lg.info(f"GIT: {self.pkg} Working tree is clean.")
+
             self.git_status = False
             return False
              
@@ -262,7 +272,7 @@ class ProjWin:
     
     def commit_changes(self):
         message = self.commit_msg_popup()
-        print(f"GIT: Committed changes with msg: \"{message}\"")
+        lg.info(str(f"GIT: Committed changes with msg: \"{message}\""))
         if message != None and message != '':
             self.index.commit(message, author=self.actor, committer=self.actor)
             self.git_status = False # reset status to clean
@@ -332,7 +342,8 @@ class ProjWin:
             else:
                 event, values = self.window.read()
 
-            print(event)
+            # print(event)
+            lg.info(f'EVENT: {self.pkg}  {event}')
 
             if event == "Exit" or event == sg.WIN_CLOSED or event == "Quit":
                 self.save_all(values)
@@ -359,6 +370,7 @@ class ProjWin:
                     os.startfile(PDM_WL)
                 except FileNotFoundError:
                     print("Error: Cannot open PDM Work Location. File not found.")
+                    lg.error("Error: Cannot open PDM Work Location. File not found.")
             elif event == '_OPEN_ANALYSIS_':
                 if self.window["_ANAL_LB_"].get_indexes() == ():
                     os.startfile(self.proj_path+'Analysis')
