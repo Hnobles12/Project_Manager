@@ -41,6 +41,10 @@ class Db:
     def get_pkg(self, pkg_name):
         pkg_data = self.db.search(self.Pkg.name == pkg_name)
         return pkg_data
+    
+    def get_pkg_by_id(self, id):
+        pkg_data = self.db.search(self.Pkg.id == id)
+        return pkg_data
 
     def get_pkg_names(self) -> list[str]:
         return [d.get('name') for d in self.db.all()]
