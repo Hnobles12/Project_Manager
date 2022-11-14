@@ -64,6 +64,21 @@ class Db:
 
         for pkg in self.get_pkg(pkg_name):
             self.db.update(pkg_dict, self.Pkg.name == pkg_name)
+            
+    def search_notes(self, search_str:str):
+        pkgs = self.db.all()
+        names = [pkg["name"] for pkg in pkgs]
+        notes = [pkg.get("PROJ_NOTES") for pkg in pkgs]
+        
+        matches = []
+        
+        for name, note in zip(names, notes):
+            if search_str.upper() in str(note).upper():
+                matches.append(name)
+        return matches
+    
+    def search_name_note(self, search_str):
+        pass       
 
 
 # Windows:
@@ -88,7 +103,7 @@ class ProjWin:
         
         self.load_repo()
 
-        print('proj_data: ', self.proj_data)
+        # print('proj_data: ', self.proj_data)
 
         l_col_layout = [[sg.Frame("Documentation:", layout=[[sg.Listbox(values=self.doc_files, size=(125, 10), key="_DOC_LB_")],
                                                             [sg.Button('Open', key='_OPEN_DOC_'), sg.FilesBrowse('Add Files', enable_events=True, key='_ADD_DOC_FILES_', target='_ADD_DOC_FILES_',initial_folder=self.proj_path+'/Documentation'), sg.Button('', key="__DOC_FILES_", visible=False), sg.Button("PDM WL", key='_OPEN_PDM_WL_'), sg.Button("FC", key="_OPEN_FC_"), sg.Button('Github Desktop',key="_OPEN_GHD_")]])],
@@ -588,7 +603,10 @@ class OpenProjWin:
                 for name in names:
                     if values['_PKG_NAME_'].upper() in name:
                         self.packages.append(name)
-                print(names)
+                for pkg in db.search_notes(values['_PKG_NAME_']):
+                    if not pkg in self.packages:
+                        self.packages.append(pkg)
+                # print(names)
                 self.window['_PKG_LB_'].update(values=self.packages)
                 self.window.refresh()
             elif event == '_PKG_LB_':
