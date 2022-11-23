@@ -9,27 +9,13 @@ import datetime
 import tinydb as tdb
 import git
 import logging as lg
+import json
 
-GIT_USER = "user"
-GIT_USER_EMAIL = "user@domain.com"
-
-PDM_WL = "\\\\ftwusers\data\e\e433679\PDM Work Location"
-FC_EXE = "C:/Users/e433679/Programs/FreeCommanderXE/FreeCommander.exe"
-GHD_EXE = "C:/Users/e433679/AppData/Local/GitHubDesktop/GitHubDesktop.exe"
-PM_DIR = 'C:/Users/e433679/Documents/Project_Manager/'
-# PM_DIR_UNIX = '/c/Users/e433679/Documents/Project_Manager/'
-#PM_DIR = '/home/hnobles12/Documents/Project_Manager/'
-PM_DB_FILE = PM_DIR+'pm_db.json'
-
-PM_LOG_FILE = PM_DIR+'project_manager.log'
-
-lg.basicConfig(filename=PM_LOG_FILE, filemode='w', format="%(asctime)s | %(levelname)s | %(message)s", level=lg.DEBUG)
-
-PM_PATH = Path('/c/Users/e433679/Documents/Project_Manager/')
+sg.theme('DarkBlack1')
 
 COMPLETION_STATUS = ['NEW', 'IN-PROGRESS', 'COMPLETE', 'REWORK']
 DISPOSITION = ['PASS', 'FAIL', 'UNKNOWN']
-sg.theme('DarkBlack1')
+
 
 
 def copy2clip(txt):
@@ -214,37 +200,43 @@ class ProjWin:
         # print(f"Untracked files: {self.untracked}")
         
     def check_repo_files(self)-> bool:
-        self.untracked = self.repo.untracked_files
-        self.modified = [item.a_path for item in self.repo.index.diff(None)]
-        self.index = self.repo.index
-        if len(self.untracked) != 0 or self.repo.is_dirty():
-            print(f"GIT: Adding untracked files: {self.untracked}")
-            lg.info(f"GIT: {self.pkg} Adding untracked files: {self.untracked}")
-            self.index.add(self.untracked)
-            print(f"GIT: Added untracked files.")
-            lg.info(f"GIT: {self.pkg} Added untracked files.")
-            # print(f"GIT: Adding modified files: {self.modified}")
-            # self.index.add(all=True)
-            # self.index.add(self.modified)
-            # print(f"GIT: Added modified files.")
-            self.repo.git.add(all=True)
-            print("GIT: Added all files.")
-            lg.info(f"GIT: {self.pkg} Added all files.")
+        try:
+            self.untracked = self.repo.untracked_files
+            self.modified = [item.a_path for item in self.repo.index.diff(None)]
+            self.index = self.repo.index
+            if len(self.untracked) != 0 or self.repo.is_dirty():
+                print(f"GIT: Adding untracked files: {self.untracked}")
+                lg.info(f"GIT: {self.pkg} Adding untracked files: {self.untracked}")
+                self.index.add(self.untracked)
+                print(f"GIT: Added untracked files.")
+                lg.info(f"GIT: {self.pkg} Added untracked files.")
+                # print(f"GIT: Adding modified files: {self.modified}")
+                # self.index.add(all=True)
+                # self.index.add(self.modified)
+                # print(f"GIT: Added modified files.")
+                self.repo.git.add(all=True)
+                print("GIT: Added all files.")
+                lg.info(f"GIT: {self.pkg} Added all files.")
+                self.git_status = True
+                return True
+            
+            elif self.repo.is_dirty(): 
+                self.git_status=True
+                return True
+            
+            else: 
+                # self.repo.git.add(all=True)
+                # print("GIT: Added all files.")
+                print("GIT: Working tree is clean.")
+                lg.info(f"GIT: {self.pkg} Working tree is clean.")
+
+                self.git_status = False
+                return False
+        except Exception as e:
+            print(f'GIT: Error in git actions: {e}')
+            lg.error(f'GIT Error: {e}')
             self.git_status = True
             return True
-        
-        elif self.repo.is_dirty(): 
-            self.git_status=True
-            return True
-        
-        else: 
-            # self.repo.git.add(all=True)
-            # print("GIT: Added all files.")
-            print("GIT: Working tree is clean.")
-            lg.info(f"GIT: {self.pkg} Working tree is clean.")
-
-            self.git_status = False
-            return False
              
     def commit_msg_popup(self) -> str:
         layout = [[sg.Text("Enter Commit Message")],
@@ -272,10 +264,11 @@ class ProjWin:
     
     def commit_changes(self):
         message = self.commit_msg_popup()
-        lg.info(str(f"GIT: Committed changes with msg: \"{message}\""))
+        
         if message != None and message != '':
             self.index.commit(message, author=self.actor, committer=self.actor)
             self.git_status = False # reset status to clean
+            lg.info(str(f"GIT: Committed changes with msg: \"{message}\""))
         else:
             sg.Popup("Canceled commit action, working tree is still dirty.")
             
@@ -343,7 +336,7 @@ class ProjWin:
                 event, values = self.window.read()
 
             # print(event)
-            lg.info(f'EVENT: {self.pkg}  {event}')
+            lg.info(f'Proj. Window Event: PKG={self.pkg}  {event}')
 
             if event == "Exit" or event == sg.WIN_CLOSED or event == "Quit":
                 self.save_all(values)
@@ -474,7 +467,8 @@ class NewProjWin:
         self.time = datetime.datetime.now()
         while True:
             event, values = self.window.read()
-            print(event)
+            # print(event)
+            lg.info(f"New Proj. Window Event: {event}")
 
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
@@ -594,7 +588,8 @@ class OpenProjWin:
         
         while True:
             event, values = self.window.read()
-            print(event)
+            # print(event)
+            lg.info(f'Open Window Event: {event}')
 
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
@@ -678,7 +673,8 @@ class StartWin:
     def spawn(self):
         while True:
             event, values = self.window.read()
-            print(event)
+            # print(event)
+            lg.info(f"Start Window Event: {event}")
 
             if event == "Exit" or event == sg.WIN_CLOSED:
                 break
@@ -698,6 +694,33 @@ class StartWin:
                 self.window.un_hide()
 
         self.window.close()
+
+with open('pm_config.json', 'r') as f:
+    config = json.load(f)
+    f.close()
+
+PM_DIR = config.get('pm_dir')
+GIT_USER = config.get('username')
+GIT_USER_EMAIL = config.get('email')
+PDM_WL = config.get('pdm_wl')
+FC_EXE = config.get('fc_exe')
+GHD_EXE = config.get('ghd_exe')
+PM_DB_FILE = PM_DIR+(config.get('pm_db') or 'pm_db.json')
+PM_LOG_FILE = PM_DIR + (config.get('pm_log') or 'pm.log')
+LOGLEVEL_STR = config.get('loglevel') or "INFO"
+
+match LOGLEVEL_STR:
+    case "INFO":
+        LOGLEVEL = lg.INFO
+    case "DEBUG":
+        LOGLEVEL = lg.DEBUG
+    case other:
+        LOGLEVEL = lg.INFO
+
+
+lg.basicConfig(filename=PM_LOG_FILE, filemode='w', format="%(asctime)s | %(levelname)s | %(message)s", level=LOGLEVEL)
+print(f'Session Log File: {PM_LOG_FILE}')
+lg.info('Loaded config.')
 
 
 db = Db(PM_DB_FILE)
