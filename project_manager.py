@@ -51,6 +51,9 @@ class Db:
         return [d.get('name') for d in self.db.search(self.Pkg.PROJ_STATUS == CS)]
     def get_pkg_names_by_DSP(self, DISP):
         return [d.get('name') for d in self.db.search(self.Pkg.PROJ_DISPOSITION == DISP)]
+    
+    def get_all(self):
+        return self.db.all()
 
     def insert_pkg(self, pkg: dict):
         self.db.insert(pkg)
@@ -534,7 +537,7 @@ class OpenProjWin:
             [sg.Column(l_col), sg.Column(r_col)],
             [sg.Text('Notes: ')],
             [sg.Multiline('', disabled=True, autoscroll=True, key='_SEL_NOTES_', size=(60,10))],
-            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button("Back"), sg.Button('Migrate Pkgs',key='_MIGRATE_')],
+            [sg.Button("Open", key='_OPEN_PROJ_', bind_return_key=True), sg.Button("Back"), sg.Button('Migrate Pkgs to PM Web',key='_MIGRATE_')],
             
         ]
 
@@ -579,6 +582,34 @@ class OpenProjWin:
         print('Starting migration.')
         new_win.migrate_setup_pkg(all_pkgs)
         print('Migration Complete.')
+        
+    def migrate_to_pmweb(self):
+        all_pkgs = db.get_all()
+        
+        new_db = Db(PM_DIR+'pm_web_db.json')
+        table = new_db.db.table('tasks')
+        for pkg in all_pkgs:
+            new = {
+                'name':pkg.get('name'),
+                'category': pkg.get('CR'),
+                'notes':pkg.get('PROJ_NOTES'),
+                'charge_num': pkg.get('PROJ_IO'),
+                'tags':[],
+                'description':'',
+                'id': pkg.doc_id,
+                'tve':pkg.get('PROJ_TVE'),
+                'created': pkg.get('created'),
+                'updated': pkg.get('updated'),
+                'status': pkg.get('PROJ_STATUS'),
+                'disposition': pkg.get('PROJ_DISPOSITION'),
+                'use_local_fs':True
+            }
+            
+            
+            table.insert(new)
+            print(f"Migrated pkg: {pkg.get('name')}")
+            
+        pass
 
     def spawn(self):
         self.packages = db.get_pkg_names() # load all packages with newest first
@@ -632,7 +663,7 @@ class OpenProjWin:
                 self.window.refresh()
                     
             elif event == '_MIGRATE_':
-                self.migrate_all()
+                self.migrate_to_pmweb()
             elif event == "_OPEN_PROJ_":
                 cr = values["_CR_COMBO_"]
                 pkg = values["_PKG_LB_"][0]
