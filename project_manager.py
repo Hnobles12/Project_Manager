@@ -602,6 +602,7 @@ class OpenProjWin:
                 'updated': pkg.get('updated'),
                 'status': pkg.get('PROJ_STATUS'),
                 'disposition': pkg.get('PROJ_DISPOSITION'),
+                'directory':f"{pkg.get('CR')}/{pkg.get('name')}",
                 'use_local_fs':True
             }
             
