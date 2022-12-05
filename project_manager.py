@@ -586,9 +586,11 @@ class OpenProjWin:
     def migrate_to_pmweb(self):
         all_pkgs = db.get_all()
         
-        new_db = Db(PM_DIR+'pm_web_db.json')
+        new_db = Db(PM_DIR+'pm_web_db_migration.json')
         table = new_db.db.table('tasks')
         for pkg in all_pkgs:
+            if pkg.get('PROJ_NOTES') == None:
+                continue
             new = {
                 'name':pkg.get('name'),
                 'category': pkg.get('CR'),
@@ -605,8 +607,6 @@ class OpenProjWin:
                 'directory':f"{pkg.get('CR')}/{pkg.get('name')}",
                 'use_local_fs':True
             }
-            
-            
             table.insert(new)
             print(f"Migrated pkg: {pkg.get('name')}")
             
